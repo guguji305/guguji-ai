@@ -42,7 +42,7 @@
 			background: red;
 		}
 
-		/* 动态画廊替换原有 #thumbnails 内容 */
+		/* 动态画廊 */
 		.gallery {
 			display: flex;
 			flex-wrap: wrap;
@@ -61,6 +61,10 @@
 			height: auto;
 			border-radius: 10px;
 			box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+			transition: transform 0.2s;
+		}
+		.img-wrapper:hover img {
+			transform: scale(1.03);
 		}
 		/* 删除按钮（管理模式显示） */
 		.delete-img-btn {
@@ -82,6 +86,26 @@
 		}
 		body.admin-mode .delete-img-btn {
 			display: block;
+		}
+
+		/* 原模板查看器补充样式（如果原CSS没完全包含） */
+		.viewer {
+			display: none;
+			position: fixed;
+			top: 0; left: 0; width: 100%; height: 100%;
+			background: rgba(10,10,10,0.95);
+			z-index: 10000;
+			cursor: pointer;
+		}
+		.viewer.visible {
+			display: block;
+		}
+		.viewer .image {
+			width: 100%;
+			height: 100%;
+			background-size: contain;
+			background-repeat: no-repeat;
+			background-position: center center;
 		}
 
 		/* 上传模态框 */
@@ -138,9 +162,9 @@
 		.danger-btn { background: #c0392b !important; }
 		.danger-btn:hover { background: #e74c3c !important; }
 
-		/* 保证 #thumbnails 内部动态内容布局兼容 */
+		/* 让 #thumbnails 适配动态内容 */
 		#thumbnails .gallery {
-			padding: 2em 1em;
+			padding: 2em 0;
 		}
 	</style>
 </head>
@@ -162,7 +186,6 @@
 
 		<!-- Thumbnail (动态画廊) -->
 		<section id="thumbnails">
-			<!-- 分类标签栏将动态插入这里 -->
 			<div id="category-tabs"></div>
 			<div class="gallery" id="gallery-container">
 				<p>⏳ 加载作品中...</p>
@@ -182,7 +205,15 @@
 
 	</div>
 
-	<!-- 管理模态框（复用快捷键 Ctrl+Shift+U） -->
+	<!-- 原模板的全屏查看器（若你删除了就补上） -->
+	<div class="viewer">
+		<div class="image" style="background-position: center center;"></div>
+		<div class="nav-next"></div>
+		<div class="nav-previous"></div>
+		<div class="toggle"></div>
+	</div>
+
+	<!-- 管理模态框 -->
 	<div id="upload-modal">
 		<div id="upload-panel">
 			<button id="close-modal">&times;</button>
@@ -221,46 +252,6 @@
 	<script src="assets/js/main.js"></script>
 
 	<script>
-		// ========== 让动态图片点击时使用原模板的全屏查看器 ==========
-		function openViewer(imageUrl) {
-		    const viewer = document.querySelector('.viewer');
-		    const imageDiv = viewer ? viewer.querySelector('.image') : null;
-		    if (!imageDiv) return;
-		
-		    // 设置背景图
-		    imageDiv.style.backgroundImage = `url('${imageUrl}')`;
-		
-		    // 显示查看器（原模板通常通过添加 class 来控制）
-		    viewer.classList.add('visible');
-		    document.body.classList.add('is-viewer'); // 有些模板用这个类
-		}
-		
-		// 关闭查看器
-		function closeViewer() {
-		    const viewer = document.querySelector('.viewer');
-		    if (!viewer) return;
-		    viewer.classList.remove('visible');
-		    document.body.classList.remove('is-viewer');
-		}
-		
-		// 为动态生成的图片绑定点击事件（委托在画廊容器上）
-		document.getElementById('gallery-container').addEventListener('click', function(e) {
-		    const img = e.target.closest('.img-wrapper img');
-		    if (!img) return;
-		    e.preventDefault();
-		    openViewer(img.src);
-		});
-		
-		// 点击查看器背景自身关闭（或者监听关闭按钮，这里简单处理）
-		document.addEventListener('click', function(e) {
-		    const viewer = document.querySelector('.viewer');
-		    if (!viewer || !viewer.classList.contains('visible')) return;
-		
-		    // 如果是点击了背景 .viewer 本身，而不是里面的链接等，则关闭
-		    if (e.target === viewer || e.target.classList.contains('image')) {
-		        closeViewer();
-		    }
-		});
 		// ========== 仓库信息 ==========
 		const host = window.location.host;
 		const pathParts = window.location.pathname.split('/').filter(p => p);
@@ -400,10 +391,12 @@
 				imageFiles.forEach(file => {
 					const wrapper = document.createElement('div');
 					wrapper.className = 'img-wrapper';
+
 					const img = document.createElement('img');
 					img.src = file.download_url;
 					img.alt = file.name;
 					img.loading = 'lazy';
+
 					const delBtn = document.createElement('button');
 					delBtn.className = 'delete-img-btn';
 					delBtn.innerHTML = '✕';
@@ -412,6 +405,7 @@
 						e.stopPropagation();
 						deleteImage(file.path, file.sha, file.name);
 					};
+
 					wrapper.appendChild(img);
 					wrapper.appendChild(delBtn);
 					container.appendChild(wrapper);
@@ -474,7 +468,8 @@
 						},
 						body: JSON.stringify({ message: `Delete ${file.name}`, sha: file.sha, branch })
 					});
-					if (res.ok) deleted++; else console.warn(`删除 ${file.name} 失败`);
+					if (res.ok) deleted++;
+					else console.warn(`删除 ${file.name} 失败`);
 				}
 				status.textContent = `✅ 已删除 ${deleted}/${files.length} 个文件，分类已清空。`;
 				await refreshCategoryList();
@@ -531,7 +526,46 @@
 			});
 		}
 
-		// 模态框
+		// ========== 原模板查看器点击逻辑 ==========
+		function openViewer(imageUrl) {
+			const viewer = document.querySelector('.viewer');
+			const imageDiv = viewer ? viewer.querySelector('.image') : null;
+			if (!imageDiv) return;
+			imageDiv.style.backgroundImage = `url('${imageUrl}')`;
+			viewer.classList.add('visible');
+			document.body.classList.add('is-viewer'); // 如果原模板使用了这个class
+		}
+
+		function closeViewer() {
+			const viewer = document.querySelector('.viewer');
+			if (!viewer) return;
+			viewer.classList.remove('visible');
+			document.body.classList.remove('is-viewer');
+		}
+
+		// 画廊点击委托
+		document.getElementById('gallery-container').addEventListener('click', function(e) {
+			const img = e.target.closest('.img-wrapper img');
+			if (!img) return;
+			e.preventDefault();
+			openViewer(img.src);
+		});
+
+		// 查看器背景点击关闭（包括 .image 自身）
+		document.querySelector('.viewer').addEventListener('click', function(e) {
+			if (e.target === this || e.target.classList.contains('image')) {
+				closeViewer();
+			}
+		});
+
+		// 键盘 ESC 关闭
+		window.addEventListener('keydown', function(e) {
+			if (e.key === 'Escape' && document.querySelector('.viewer.visible')) {
+				closeViewer();
+			}
+		});
+
+		// ========== 管理模态框快捷键 ==========
 		const modal = document.getElementById('upload-modal');
 		function openAdminPanel() {
 			modal.classList.add('active');
@@ -551,12 +585,15 @@
 			}
 		});
 
-		// 初始化
+		// ========== 初始化 ==========
 		window.addEventListener('load', async () => {
 			const savedToken = localStorage.getItem(tokenKey);
 			if (savedToken) document.getElementById('token-input').value = savedToken;
 			await refreshCategoryList();
 			switchCategory(categoryList.includes('sfw') ? 'sfw' : categoryList[0]);
+
+			// 确保查看器默认隐藏（防止原模板残留状态）
+			closeViewer();
 		});
 	</script>
 </body>
