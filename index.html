@@ -274,7 +274,7 @@
 			status.textContent = '⏳ 正在上传...';
 			const reader = new FileReader();
 			reader.onload = async function(e) {
-				const content = e.target目标.result.split(',')[1];
+				const content = e.target.result.split(',')[1];
 				try {
 					const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
 					const response = await fetch(url, {
@@ -310,7 +310,7 @@
 
 		// ========== 模态框控制 ==========
 		const modal = document.getElementById('upload-modal');
-		document.getElementById('admin-trigger').addEventListener('click', () => {		文档.getElementById('admin-trigger').addEventListener('click', () => {
+		document.getElementById('admin-trigger').addEventListener('click', () => {
 			modal.classList.add('active');
 		});
 		document.getElementById('close-modal').addEventListener('click', () => {
@@ -318,7 +318,7 @@
 		});
 		// 点击背景也可关闭
 		modal.addEventListener('click', (e) => {
-			if (e.target === modal) modal.classList.remove('active');			如果 (e.target目标 === modal模态) modal模态.类列表.移除('active''激活');
+			if (e.target === modal) modal.classList.remove('active');
 		});
 
 		// ========== 页面初始化 ==========
@@ -326,7 +326,7 @@
 			loadGallery('sfw');
 			const savedToken = localStorage.getItem(tokenKey);
 			if (savedToken) {
-				document.getElementById('token-input').value = savedToken;				文档.getElementById('token-input').值 = 已保存的令牌;
+				document.getElementById('token-input').value = savedToken;
 			}
 		});
 	</script>
