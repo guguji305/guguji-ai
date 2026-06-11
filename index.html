@@ -251,13 +251,13 @@
 		}
 
 		// ========== 分类管理 ==========
-		let currentCategory = 'sfw';
-		let categoryList = ['sfw', 'nsfw'];
+		let currentCategory = 'acg';
+		let categoryList = ['acg', 'nsfw'];
 
 		async function fetchCategories() {
 			const token = getToken();
 			const headers = token ? { 'Authorization': `token ${token}` } : {};
-			const url = `https://api.github.com/repos/${owner}/${repo}/contents/images`;
+			const url = `https://api.github.com/${owner}/${repo}/tree/images`;
 			try {
 				const res = await fetch(url, { headers });
 				if (!res.ok) {
