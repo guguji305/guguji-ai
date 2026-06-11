@@ -7,7 +7,93 @@
 	<link rel="stylesheet" href="assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 	<style>
-		/* ===== 原有分类标签栏 ===== */
+		/* ===== 覆盖原有 viewer 样式，改为左侧固定查看器 ===== */
+		#viewer {
+			position: fixed;
+			left: 0;
+			top: 0;
+			width: 50vw;
+			height: 100vh;
+			background: #0b0b0b;
+			z-index: 100;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			padding: 20px;
+			box-sizing: border-box;
+		}
+		/* 隐藏原有的 inner 等结构，重新利用容器 */
+		#viewer .inner, 
+		#viewer .nav-next, 
+		#viewer .nav-previous, 
+		#viewer .toggle {
+			display: none;    /* 原模板的按钮不再需要 */
+		}
+		/* 我们自己插入的内容 */
+		#viewer .viewer-content {
+			width: 100%;
+			height: 100%;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+		}
+		#viewer .viewer-img {
+			max-width: 90%;
+			max-height: 80vh;
+			object-fit: contain;
+			border-radius: 8px;
+			display: none; /* 初始不显示 */
+		}
+		#viewer .viewer-placeholder {
+			color: #aaa;
+			font-size: 1.4em;
+			opacity: 0.6;
+			text-align: center;
+		}
+		#viewer .viewer-nav {
+			margin-top: 15px;
+			display: flex;
+			gap: 20px;
+			display: none; /* 初始不显示 */
+		}
+		#viewer .viewer-nav button {
+			background: rgba(255,255,255,0.15);
+			border: none;
+			color: white;
+			font-size: 2em;
+			padding: 8px 18px;
+			border-radius: 8px;
+			cursor: pointer;
+			transition: background 0.2s;
+		}
+		#viewer .viewer-nav button:hover {
+			background: rgba(255,255,255,0.3);
+		}
+		#viewer .viewer-counter {
+			margin-top: 10px;
+			color: #ccc;
+			font-size: 0.9em;
+			display: none; /* 初始不显示 */
+		}
+
+		/* 右侧内容留出空间 */
+		body {
+			margin-left: 50vw;
+			transition: margin-left 0.3s;
+		}
+		/* 移动端隐藏 viewer，全宽 */
+		@media (max-width: 768px) {
+			#viewer {
+				display: none;
+			}
+			body {
+				margin-left: 0;
+			}
+		}
+
+		/* ===== 以下保持你的原有样式 ===== */
 		#category-tabs {
 			text-align: center;
 			margin: 2em 0 0.5em;
@@ -37,7 +123,6 @@
 			background: red;
 		}
 
-		/* ===== 画廊图片容器 ===== */
 		.gallery {
 			display: flex;
 			flex-wrap: wrap;
@@ -57,7 +142,6 @@
 			border-radius: 10px;
 			box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 		}
-		/* 删除按钮（默认隐藏，管理模式显示） */
 		.delete-img-btn {
 			position: absolute;
 			top: 8px;
@@ -79,7 +163,6 @@
 			display: block;
 		}
 
-		/* ===== 上传模态框 ===== */
 		#upload-modal {
 			display: none;
 			position: fixed;
@@ -139,75 +222,6 @@
 		.danger-btn:hover {
 			background: #e74c3c !important;
 		}
-
-		/* ========== 新添加：左侧固定查看器 ========== */
-		#viewer {
-			position: fixed;
-			left: 0;
-			top: 0;
-			width: 50vw;
-			height: 100vh;
-			background: #0b0b0b;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			z-index: 100;
-			padding: 20px;
-			box-sizing: border-box;
-		}
-		#viewer img {
-			max-width: 90%;
-			max-height: 80vh;
-			object-fit: contain;
-			border-radius: 8px;
-			transition: opacity 0.2s;
-		}
-		#viewer .placeholder {
-			color: #aaa;
-			font-size: 1.4em;
-			opacity: 0.6;
-			text-align: center;
-		}
-		#viewer .nav-buttons {
-			margin-top: 15px;
-			display: flex;
-			gap: 20px;
-		}
-		#viewer .nav-buttons button {
-			background: rgba(255,255,255,0.15);
-			border: none;
-			color: white;
-			font-size: 2em;
-			padding: 8px 18px;
-			border-radius: 8px;
-			cursor: pointer;
-			transition: background 0.2s;
-		}
-		#viewer .nav-buttons button:hover {
-			background: rgba(255,255,255,0.3);
-		}
-		#viewer .image-counter {
-			margin-top: 10px;
-			color: #ccc;
-			font-size: 0.9em;
-		}
-
-		/* 为右侧内容留出查看器的空间 */
-		body {
-			margin-left: 50vw;
-			transition: margin-left 0.3s;
-		}
-
-		/* 移动端：查看器自动隐藏，内容全宽 */
-		@media (max-width: 768px) {
-			#viewer {
-				display: none;
-			}
-			body {
-				margin-left: 0;
-			}
-		}
 	</style>
 </head>
 <body>
@@ -219,10 +233,8 @@
 			<p>有好的作品会保存在这<br />有时间就更新</p>
 		</header>
 
-		<!-- 动态分类标签栏 -->
 		<div id="category-tabs"></div>
 
-		<!-- 统一画廊 -->
 		<section style="text-align: center; padding-top: 0.5em;">
 			<div class="gallery" id="gallery-container">
 				<p>⏳ 加载作品中...</p>
@@ -241,24 +253,26 @@
 
 	</div>
 
-	<!-- ========== 左侧固定查看器（在 main 外部） ========== -->
+	<!-- ===== 使用模板原有的 viewer，内部结构重新改造 ===== -->
 	<div id="viewer">
-		<img id="viewer-image" src="" alt="" style="display:none;" />
-		<div id="viewer-placeholder" class="placeholder">点击分类查看作品</div>
-		<div class="nav-buttons" id="nav-buttons" style="display:none;">
-			<button id="prev-btn">◀</button>
-			<button id="next-btn">▶</button>
+		<!-- 原来的 inner 等结构保留但用 CSS 隐藏，我们新加内容放在后面 -->
+		<div class="inner"><div class="nav-next"></div><div class="nav-previous"></div><div class="toggle"></div></div>
+		<div class="viewer-content">
+			<img class="viewer-img" id="viewer-img" src="" alt="" />
+			<div class="viewer-placeholder" id="viewer-placeholder">点击分类查看作品</div>
+			<div class="viewer-nav" id="viewer-nav">
+				<button id="prev-btn">◀</button>
+				<button id="next-btn">▶</button>
+			</div>
+			<div class="viewer-counter" id="viewer-counter"></div>
 		</div>
-		<div class="image-counter" id="image-counter" style="display:none;"></div>
 	</div>
 
-	<!-- 隐藏的上传 + 管理模态框 -->
 	<div id="upload-modal">
 		<div id="upload-panel">
 			<button id="close-modal">&times;</button>
 			<h3>🔧 作品集管理</h3>
 
-			<!-- Token -->
 			<div style="text-align: left;">
 				<label>🔑 GitHub Token <span class="hint">（自动保存）</span></label>
 				<input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxx" />
@@ -267,7 +281,6 @@
 
 			<hr>
 
-			<!-- 分类创建 -->
 			<div style="text-align: left;">
 				<label>📁 当前分类</label>
 				<select id="category-select"></select>
@@ -279,7 +292,6 @@
 
 			<hr>
 
-			<!-- 上传 -->
 			<div style="text-align: left;">
 				<label>🖼️ 选择图片（可多选）</label>
 				<input type="file" id="file-input" accept="image/*" multiple />
@@ -288,7 +300,6 @@
 
 			<hr>
 
-			<!-- 危险操作：删除分类 -->
 			<button class="danger-btn" onclick="deleteCategory()">🗑️ 删除当前分类（所有图片）</button>
 			<p style="margin-top:10px; font-size:0.8em; color:#666;">⚠️ 删除后不可恢复，请谨慎操作</p>
 
@@ -302,7 +313,7 @@
 	<script src="assets/js/main.js"></script>
 
 	<script>
-		// ========== 仓库信息（自适应） ==========
+		// ========== 仓库信息 ==========
 		const host = window.location.host;
 		const pathParts = window.location.pathname.split('/').filter(p => p);
 		let owner, repo;
@@ -310,13 +321,12 @@
 			owner = host.split('.')[0];
 			repo = pathParts.length > 0 ? pathParts[0] : host;
 		} else {
-			// 自定义域名请修改这里！
 			owner = 'guguji305';
 			repo = 'guguji-ai';
 		}
-		const branch = 'main';   // 如果不是 main 分支请改成 master
+		const branch = 'main';
 
-		// ========== Token ==========
+		// Token
 		const tokenKey = 'github_token_for_uploader';
 		function getToken() { return localStorage.getItem(tokenKey); }
 		function saveToken() {
@@ -330,55 +340,50 @@
 			}
 		}
 
-		// ========== 查看器状态 ==========
+		// 查看器状态
 		let currentCategory = 'sfw';
 		let categoryList = ['sfw', 'nsfw'];
-		let categoryImages = [];               // 当前分类的图片数组
-		let currentViewerIdx = -1;             // 查看器当前索引
+		let categoryImages = [];
+		let currentViewerIdx = -1;
 
-		// 查看器控制
-		function showImageViewer(index) {
+		function showViewer(index) {
 			if (!categoryImages.length) {
 				hideViewer();
 				return;
 			}
-			// 边界保护
 			if (index < 0) index = 0;
 			if (index >= categoryImages.length) index = categoryImages.length - 1;
 			currentViewerIdx = index;
-
 			const img = categoryImages[index];
-			document.getElementById('viewer-image').src = img.download_url;
-			document.getElementById('viewer-image').style.display = 'block';
+			document.getElementById('viewer-img').src = img.download_url;
+			document.getElementById('viewer-img').style.display = 'block';
 			document.getElementById('viewer-placeholder').style.display = 'none';
-			document.getElementById('nav-buttons').style.display = 'flex';
-			document.getElementById('image-counter').style.display = 'block';
-			document.getElementById('image-counter').textContent = `${index + 1} / ${categoryImages.length}`;
+			document.getElementById('viewer-nav').style.display = 'flex';
+			document.getElementById('viewer-counter').style.display = 'block';
+			document.getElementById('viewer-counter').textContent = `${index + 1} / ${categoryImages.length}`;
 		}
 
 		function hideViewer() {
-			document.getElementById('viewer-image').style.display = 'none';
+			document.getElementById('viewer-img').style.display = 'none';
 			document.getElementById('viewer-placeholder').style.display = 'block';
-			document.getElementById('nav-buttons').style.display = 'none';
-			document.getElementById('image-counter').style.display = 'none';
+			document.getElementById('viewer-nav').style.display = 'none';
+			document.getElementById('viewer-counter').style.display = 'none';
 			currentViewerIdx = -1;
 		}
 
-		function navigateViewer(direction) {
+		function navigateViewer(dir) {
 			if (!categoryImages.length) return;
-			currentViewerIdx = (currentViewerIdx + direction + categoryImages.length) % categoryImages.length;
-			showImageViewer(currentViewerIdx);
+			currentViewerIdx = (currentViewerIdx + dir + categoryImages.length) % categoryImages.length;
+			showViewer(currentViewerIdx);
 		}
 
-		// 绑定左右箭头
 		document.getElementById('prev-btn').addEventListener('click', () => navigateViewer(-1));
 		document.getElementById('next-btn').addEventListener('click', () => navigateViewer(1));
 
-		// ========== 分类管理 ==========
+		// 分类加载（使用 Git Tree API）
 		async function fetchCategories() {
 			const token = getToken();
 			const headers = token ? { 'Authorization': `token ${token}` } : {};
-			// 使用 Git Tree API 获取所有 images/ 下的第一层目录
 			const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
 			try {
 				const res = await fetch(url, { headers });
@@ -410,7 +415,6 @@
 			const categories = await fetchCategories();
 			categoryList = categories;
 			localStorage.setItem('custom_categories', JSON.stringify(categories));
-
 			const select = document.getElementById('category-select');
 			select.innerHTML = '';
 			categories.forEach(cat => {
@@ -419,9 +423,7 @@
 				opt.textContent = cat === 'nsfw' ? '🔞 NSFW' : cat;
 				select.appendChild(opt);
 			});
-
 			renderCategoryTabs(categories);
-
 			if (!categories.includes(currentCategory)) {
 				currentCategory = categories[0];
 			}
@@ -472,18 +474,14 @@
 			loadGallery(category);
 		}
 
-		// ========== 画廊加载（联动查看器） ==========
 		async function loadGallery(category) {
 			const container = document.getElementById('gallery-container');
 			container.innerHTML = '<p>⏳ 加载中...</p>';
-
-			// 重置查看器数据
 			categoryImages = [];
 			hideViewer();
 
 			const token = getToken();
 			const headers = token ? { 'Authorization': `token ${token}` } : {};
-
 			try {
 				const url = `https://api.github.com/repos/${owner}/${repo}/contents/images/${category}`;
 				const res = await fetch(url, { headers });
@@ -505,15 +503,10 @@
 					container.innerHTML = '<p>暂无图片</p>';
 					return;
 				}
-
-				// 保存当前分类图片数组
 				categoryImages = imageFiles;
-				// 默认显示第一张到查看器
 				if (categoryImages.length > 0) {
-					showImageViewer(0);
+					showViewer(0);
 				}
-
-				// 构建缩略图
 				imageFiles.forEach((file, idx) => {
 					const wrapper = document.createElement('div');
 					wrapper.className = 'img-wrapper';
@@ -522,8 +515,7 @@
 					img.src = file.download_url;
 					img.alt = file.name;
 					img.loading = 'lazy';
-					// 点击缩略图 → 打开查看器对应图片
-					img.addEventListener('click', () => showImageViewer(idx));
+					img.addEventListener('click', () => showViewer(idx));
 
 					const delBtn = document.createElement('button');
 					delBtn.className = 'delete-img-btn';
@@ -543,7 +535,6 @@
 			}
 		}
 
-		// ========== 删除单张图片 ==========
 		async function deleteImage(path, sha, fileName) {
 			if (!confirm(`确定要删除 "${fileName}" 吗？此操作不可恢复！`)) return;
 			const token = getToken();
@@ -557,7 +548,7 @@
 					method: 'DELETE',
 					headers: {
 						'Authorization': `token ${token}`,
-						'Content-Type': 'application/json',
+						'Content-Type': 'application/json'
 					},
 					body: JSON.stringify({
 						message: `Delete ${fileName}`,
@@ -577,35 +568,26 @@
 			}
 		}
 
-		// ========== 删除整个分类 ==========
 		async function deleteCategory() {
 			const category = document.getElementById('category-select').value;
 			if (!confirm(`⚠️ 将删除“${category}”作品集及其所有图片！\n此操作不可恢复，确定继续吗？`)) return;
-
 			const token = getToken();
 			if (!token) {
 				alert('请先保存 GitHub Token');
 				return;
 			}
-
 			const status = document.getElementById('upload-status');
 			status.textContent = `🗑️ 正在删除“${category}”中的所有文件...`;
-
 			try {
 				const listUrl = `https://api.github.com/repos/${owner}/${repo}/contents/images/${category}`;
-				const listRes = await fetch(listUrl, {
-					headers: { 'Authorization': `token ${token}` }
-				});
-				if (!listRes.ok) {
-					throw new Error(`无法获取文件列表 (${listRes.status})`);
-				}
+				const listRes = await fetch(listUrl, { headers: { 'Authorization': `token ${token}` } });
+				if (!listRes.ok) throw new Error(`无法获取文件列表 (${listRes.status})`);
 				const files = await listRes.json();
 				if (!Array.isArray(files) || files.length === 0) {
 					status.textContent = '✅ 分类已空，可直接移除。';
 					await refreshCategoryList();
 					return;
 				}
-
 				let deleted = 0;
 				for (const file of files) {
 					const delUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${file.path}`;
@@ -613,7 +595,7 @@
 						method: 'DELETE',
 						headers: {
 							'Authorization': `token ${token}`,
-							'Content-Type': 'application/json',
+							'Content-Type': 'application/json'
 						},
 						body: JSON.stringify({
 							message: `Delete ${file.name} (category removal)`,
@@ -631,32 +613,26 @@
 			}
 		}
 
-		// ========== 批量上传 ==========
 		async function uploadImages() {
 			const token = getToken();
 			if (!token) {
 				alert('请先输入并保存 GitHub Token！');
 				return;
 			}
-
 			const fileInput = document.getElementById('file-input');
 			const category = document.getElementById('category-select').value;
 			const status = document.getElementById('upload-status');
-
 			if (!fileInput.files || fileInput.files.length === 0) {
 				alert('请至少选择一张图片');
 				return;
 			}
-
 			status.textContent = `⏳ 正在上传 ${fileInput.files.length} 个文件...`;
 			const results = [];
-
 			for (let i = 0; i < fileInput.files.length; i++) {
 				const file = fileInput.files[i];
 				const fileName = file.name.replace(/\s+/g, '_');
 				const path = `images/${category}/${fileName}`;
 				status.textContent = `⏳ 上传中 (${i+1}/${fileInput.files.length}): ${fileName}`;
-
 				try {
 					const content = await readFileAsBase64(file);
 					const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
@@ -664,7 +640,7 @@
 						method: 'PUT',
 						headers: {
 							'Authorization': `token ${token}`,
-							'Content-Type': 'application/json',
+							'Content-Type': 'application/json'
 						},
 						body: JSON.stringify({
 							message: `Upload ${fileName} to ${category}`,
@@ -682,7 +658,6 @@
 					results.push(`❌ ${fileName}: ${error.message}`);
 				}
 			}
-
 			status.innerHTML = results.join('<br>');
 			await refreshCategoryList();
 			loadGallery(category);
@@ -698,49 +673,34 @@
 			});
 		}
 
-		// ========== 模态框 + 管理模式 ==========
+		// 模态框管理
 		const modal = document.getElementById('upload-modal');
-
 		function openAdminPanel() {
 			modal.classList.add('active');
 			document.body.classList.add('admin-mode');
 			refreshCategoryList();
 		}
-
 		function closeAdminPanel() {
 			modal.classList.remove('active');
 			document.body.classList.remove('admin-mode');
 		}
-
 		document.getElementById('close-modal').addEventListener('click', closeAdminPanel);
 		modal.addEventListener('click', (e) => {
 			if (e.target === modal) closeAdminPanel();
 		});
-
-		// 快捷键 Ctrl+Shift+U
 		window.addEventListener('keydown', (e) => {
 			if (e.ctrlKey && e.shiftKey && e.key === 'U') {
 				e.preventDefault();
-				if (modal.classList.contains('active')) {
-					closeAdminPanel();
-				} else {
-					openAdminPanel();
-				}
+				modal.classList.contains('active') ? closeAdminPanel() : openAdminPanel();
 			}
 		});
 
-		// ========== 初始化 ==========
+		// 初始化
 		window.addEventListener('load', async () => {
 			const savedToken = localStorage.getItem(tokenKey);
-			if (savedToken) {
-				document.getElementById('token-input').value = savedToken;
-			}
+			if (savedToken) document.getElementById('token-input').value = savedToken;
 			await refreshCategoryList();
-			if (categoryList.includes('sfw')) {
-				switchCategory('sfw');
-			} else {
-				switchCategory(categoryList[0]);
-			}
+			switchCategory(categoryList.includes('sfw') ? 'sfw' : categoryList[0]);
 		});
 	</script>
 </body>
