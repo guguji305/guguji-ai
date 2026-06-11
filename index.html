@@ -1,183 +1,235 @@
 <!DOCTYPE HTML>
-<!--
-	Lens by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
--->
 <html>
 <head>
 	<title>咕咕鸡的 AI 作品集</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<!-- 引入 Lens 模板基础 CSS (为了字体、图标和基础 Reset) -->
 	<link rel="stylesheet" href="assets/css/main.css" />
+	<link rel="stylesheet" href="assets/css/fontawesome-all.min.css" />
 	<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	
 	<style>
-		/* ========== 1. 分类标签栏 (适配移动端与深色主题) ========== */
-		#category-tabs {
-			text-align: center;
-			padding: 1em;
-			position: sticky;
-			top: 0;
-			background: rgba(24, 24, 24, 0.9);
-			z-index: 100;
-			backdrop-filter: blur(10px);
-			border-bottom: 1px solid rgba(255,255,255,0.05);
-			display: flex;
-			flex-wrap: wrap;
-			justify-content: center;
-			gap: 8px;
+		/* ========== 1. 全局重置与深色主题统一 (解决混乱的核心) ========== */
+		body {
+			margin: 0; padding: 0; overflow: hidden;
+			background: #121212; color: #e0e0e0;
+			font-family: 'Source Sans Pro', sans-serif;
 		}
-		#category-tabs button {
-			padding: 8px 18px;
-			border: 1px solid rgba(255,255,255,0.2);
-			border-radius: 20px;
-			background: rgba(255,255,255,0.05);
-			color: #ccc;
-			font-size: 0.9em;
-			font-weight: bold;
-			cursor: pointer;
-			transition: 0.2s;
-		}
-		#category-tabs button:hover { background: rgba(255,255,255,0.15); color: #fff; }
-		#category-tabs button.active { background: #fff; color: #222; border-color: #fff; }
-		#category-tabs button.nsfw-tab { background: rgba(200,0,0,0.3); color: #ffcccc; border-color: rgba(255,0,0,0.4); }
-		#category-tabs button.nsfw-tab.active { background: #e74c3c; color: white; border-color: #e74c3c; }
+		#app-container { display: flex; height: 100vh; width: 100vw; }
 
-		/* ========== 2. 画廊与删除按钮 ========== */
-		#thumbnails .thumbs article { position: relative; } 
+		/* 隐藏原模板自带的全屏 Viewer，防止 JS 冲突 */
+		#viewer { display: none !important; }
+
+		/* ========== 2. 左侧实时幻灯片 Viewer (PC端) ========== */
+		#left-viewer {
+			width: 60%; height: 100%; background: #0a0a0a;
+			display: flex; align-items: center; justify-content: center;
+			position: relative; flex-shrink: 0;
+			border-right: 1px solid #222;
+		}
+		#viewer-img {
+			max-width: 92%; max-height: 92%; object-fit: contain;
+			transition: opacity 0.6s ease-in-out;
+			box-shadow: 0 15px 40px rgba(0,0,0,0.6); border-radius: 4px;
+		}
+		.viewer-overlay {
+			position: absolute; bottom: 30px; left: 0; right: 0;
+			text-align: center; pointer-events: none;
+		}
+		#resume-slideshow {
+			pointer-events: auto; padding: 10px 24px;
+			background: rgba(255,255,255,0.1); color: #fff;
+			border: 1px solid rgba(255,255,255,0.2); border-radius: 30px;
+			cursor: pointer; display: none; backdrop-filter: blur(10px);
+			transition: 0.3s; font-size: 0.9em; letter-spacing: 1px;
+		}
+		#resume-slideshow:hover { background: rgba(255,255,255,0.25); }
+		#viewer-caption {
+			color: rgba(255,255,255,0.5); margin-top: 15px;
+			font-size: 0.85em; letter-spacing: 1px; text-transform: uppercase;
+		}
+
+		/* ========== 3. 右侧内容区 (画廊与文本) ========== */
+		#right-content {
+			width: 40%; height: 100%; overflow-y: auto;
+			background: #181818; box-sizing: border-box;
+		}
+		#right-content::-webkit-scrollbar { width: 6px; }
+		#right-content::-webkit-scrollbar-track { background: #111; }
+		#right-content::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+		.content-wrapper { padding: 3em 2em; max-width: 800px; margin: 0 auto; }
+		header, footer { text-align: center; margin-bottom: 3em; }
+		header h1 { font-size: 2.2em; color: #fff; margin-bottom: 0.2em; line-height: 1.2; }
+		header p { color: #888; font-size: 1em; }
+		
+		/* 分类标签栏 (深色版) */
+		#category-tabs { text-align: center; margin: 2em 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+		#category-tabs button {
+			padding: 8px 20px; border: 1px solid #333; border-radius: 20px;
+			background: transparent; color: #aaa; font-weight: 600;
+			cursor: pointer; transition: 0.2s; font-size: 0.85em;
+		}
+		#category-tabs button:hover { border-color: #666; color: #fff; }
+		#category-tabs button.active { background: #fff; color: #000; border-color: #fff; }
+		#category-tabs button.nsfw-tab { border-color: #500; color: #f88; }
+		#category-tabs button.nsfw-tab.active { background: #c00; color: #fff; border-color: #c00; }
+
+		/* 动态画廊网格 (深色版) */
+		.gallery-grid {
+			display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+			gap: 12px; margin: 2em 0;
+		}
+		.img-wrapper {
+			position: relative; border-radius: 8px; overflow: hidden;
+			cursor: pointer; background: #222; aspect-ratio: 1/1;
+			transition: transform 0.3s, box-shadow 0.3s;
+		}
+		.img-wrapper img {
+			width: 100%; height: 100%; object-fit: cover; display: block;
+			transition: transform 0.4s ease;
+		}
+		.img-wrapper:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+		.img-wrapper:hover img { transform: scale(1.08); }
+		.img-wrapper.active { outline: 3px solid #007bff; outline-offset: -3px; }
+		
+		/* 删除按钮 */
 		.delete-img-btn {
-			position: absolute;
-			top: 10px; right: 10px;
-			background: rgba(231, 76, 60, 0.9);
-			color: white;
-			border: none;
-			border-radius: 50%;
-			width: 32px; height: 32px;
-			font-size: 18px; line-height: 32px;
-			text-align: center;
-			cursor: pointer;
-			display: none;
-			z-index: 5;
-			box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+			position: absolute; top: 8px; right: 8px;
+			background: rgba(220, 50, 50, 0.9); color: white;
+			border: none; border-radius: 50%; width: 26px; height: 26px;
+			font-size: 14px; line-height: 26px; text-align: center;
+			cursor: pointer; display: none; z-index: 5;
 		}
 		body.admin-mode .delete-img-btn { display: block; }
 
-		/* ========== 3. 查看器微调 (确保移动端点击热区) ========== */
-		#viewer .nav-next, #viewer .nav-previous {
-			cursor: pointer;
-			/* 确保移动端有足够的点击区域 */
-			min-width: 44px; 
-			min-height: 44px;
-		}
+		/* Footer */
+		footer h2 { color: #fff; font-size: 1.5em; }
+		footer p { color: #888; }
+		footer .icons { list-style: none; padding: 0; display: flex; justify-content: center; gap: 20px; margin-top: 1.5em; }
+		footer .icons a { color: #888; font-size: 1.5em; transition: 0.2s; }
+		footer .icons a:hover { color: #fff; }
 
-		/* ========== 4. 管理模态框 (适配小屏幕) ========== */
+		/* ========== 4. 移动端专属全屏 Viewer (窄屏触发) ========== */
+		#mobile-viewer {
+			display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+			background: rgba(0,0,0,0.95); z-index: 2000;
+			flex-direction: column; align-items: center; justify-content: center;
+		}
+		#mobile-viewer.active { display: flex; }
+		#mobile-viewer img { max-width: 95%; max-height: 80vh; object-fit: contain; }
+		#mobile-viewer .mv-controls {
+			position: absolute; bottom: 30px; display: flex; gap: 20px; align-items: center;
+		}
+		#mobile-viewer .mv-btn {
+			background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #444;
+			width: 50px; height: 50px; border-radius: 50%; font-size: 20px;
+			display: flex; align-items: center; justify-content: center; cursor: pointer;
+		}
+		#mobile-viewer .mv-close { position: absolute; top: 20px; right: 20px; font-size: 30px; color: #fff; cursor: pointer; background: none; border: none; }
+
+		/* ========== 5. 上传管理模态框 ========== */
 		#upload-modal {
-			display: none;
-			position: fixed;
-			top: 0; left: 0; width: 100%; height: 100%;
-			background: rgba(0,0,0,0.85);
-			z-index: 10001; 
-			justify-content: center;
-			align-items: center;
+			display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+			background: rgba(0,0,0,0.8); z-index: 3000; justify-content: center; align-items: center;
 		}
 		#upload-modal.active { display: flex; }
 		#upload-panel {
-			background: #222;
-			color: #eee;
-			padding: 1.5em;
-			border-radius: 12px;
-			max-width: 450px;
-			width: 90%;
-			max-height: 90vh;
-			overflow-y: auto;
-			box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-			text-align: center;
-			position: relative;
-			border: 1px solid #444;
+			background: #222; color: #eee; padding: 2em; border-radius: 12px;
+			max-width: 450px; width: 90%; max-height: 90vh; overflow-y: auto;
+			box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid #333;
 		}
-		#upload-panel h3 { color: #fff; margin-top: 0; }
+		#upload-panel h3 { margin-top: 0; color: #fff; text-align: center; }
 		#upload-panel input, #upload-panel select, #upload-panel button {
 			margin: 6px 0; padding: 10px; border-radius: 6px;
-			border: 1px solid #555; background: #333; color: #eee;
+			border: 1px solid #444; background: #111; color: #eee;
 			width: 100%; box-sizing: border-box; font-size: 14px;
 		}
-		#upload-panel button {
-			background: #fff; color: #222; cursor: pointer;
-			border: none; font-weight: bold; transition: 0.2s;
-		}
+		#upload-panel button { background: #fff; color: #000; font-weight: bold; cursor: pointer; border: none; }
 		#upload-panel button:hover { background: #ddd; }
-		#close-modal {
-			position: absolute; top: 10px; right: 14px;
-			background: none !important; border: none;
-			font-size: 28px; color: #999; cursor: pointer; width: auto;
-		}
-		.hint { font-size: 0.8em; opacity: 0.6; }
+		#close-modal { position: absolute; top: 10px; right: 15px; background: none!important; border: none; font-size: 24px; color: #888; cursor: pointer; width: auto; }
 		.danger-btn { background: #c0392b !important; color: white !important; }
-		.danger-btn:hover { background: #e74c3c !important; }
-		#upload-status { 
-			margin-top: 15px; font-size: 0.85em; color: #aaa; 
-			text-align: left; background: #111; padding: 10px; 
-			border-radius: 6px; max-height: 120px; overflow-y: auto;
+		#upload-status { margin-top: 15px; font-size: 0.85em; color: #aaa; background: #111; padding: 10px; border-radius: 6px; max-height: 120px; overflow-y: auto; }
+
+		/* ========== 6. 移动端响应式 (核心适配) ========== */
+		@media (max-width: 900px) {
+			body { overflow: auto; }
+			#app-container { flex-direction: column; height: auto; }
+			#left-viewer { display: none; } /* 移动端隐藏左侧幻灯片，节省空间 */
+			#right-content { width: 100%; height: auto; border: none; }
+			.content-wrapper { padding: 2em 1em; }
+			header h1 { font-size: 1.8em; }
+			.gallery-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
 		}
 	</style>
 </head>
 <body class="is-preload-0 is-preload-1 is-preload-2">
 
-	<!-- Main -->
-	<div id="main">
-		<!-- Header -->
-		<header id="header">
-			<h1>咕咕鸡 <br />AI 绘画作品集</h1>
-			<p>有好的作品会保存在这<br />有时间就更新</p>
-			<ul class="actions">
-				<li><a href="#thumbnails" class="arrow scrolly">往下看作品</a></li>
-			</ul>
-		</header>
+	<!-- 欺骗原模板 main.js 的隐藏容器 -->
+	<div id="viewer"><div class="inner"><div class="nav-next"></div><div class="nav-previous"></div><div class="toggle"></div></div><div class="slide loading"><div class="caption"></div><div class="image"></div></div></div>
 
-		<!-- Thumbnails -->
-		<section id="thumbnails">
-			<div id="category-tabs"></div>
-			<div class="thumbs" id="gallery-container">
-				<p style="text-align:center; padding:3em; color:#888;">⏳ 加载作品中...</p>
+	<!-- 主应用容器 -->
+	<div id="app-container">
+		
+		<!-- 左侧实时幻灯片 (PC端显示) -->
+		<aside id="left-viewer">
+			<img id="viewer-img" src="" alt="Slideshow" />
+			<div class="viewer-overlay">
+				<button id="resume-slideshow">▶ 恢复自动播放</button>
+				<div id="viewer-caption"></div>
 			</div>
-		</section>
+		</aside>
 
-		<!-- Footer -->
-		<footer id="footer">
-			<h2>联系我</h2>
-			<p>对作品感兴趣？一起合作？发邮件或社交媒体找我。</p>
-			<ul class="icons">
-				<li><a href="mailto:1599316531@qq.com" class="icon solid fa-envelope"><span class="label">Email</span></a></li>
-				<li><a href="https://twitter.com/youraccount" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
-				<li><a href="https://www.instagram.com/youraccount" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
-			</ul>
-		</footer>
+		<!-- 右侧内容区 -->
+		<main id="right-content">
+			<div class="content-wrapper">
+				<header>
+					<h1>咕咕鸡 <br/>AI 绘画作品集</h1>
+					<p>有好的作品会保存在这，有时间就更新</p>
+				</header>
+
+				<section id="thumbnails">
+					<div id="category-tabs"></div>
+					<div class="gallery-grid" id="gallery-container">
+						<p style="text-align:center; grid-column: 1/-1; color:#666;">⏳ 加载作品中...</p>
+					</div>
+				</section>
+
+				<footer>
+					<h2>联系我</h2>
+					<p>对作品感兴趣？一起合作？发邮件或社交媒体找我。</p>
+					<ul class="icons">
+						<li><a href="mailto:1599316531@qq.com" class="icon solid fa-envelope"></a></li>
+						<li><a href="https://twitter.com/youraccount" class="icon brands fa-twitter"></a></li>
+						<li><a href="https://www.instagram.com/youraccount" class="icon brands fa-instagram"></a></li>
+					</ul>
+				</footer>
+			</div>
+		</main>
 	</div>
 
-	<!-- Viewer (Lens 原生结构，不可随意修改) -->
-	<div id="viewer">
-		<div class="inner">
-			<div class="nav-next"></div>
-			<div class="nav-previous"></div>
-			<div class="toggle"></div>
-		</div>
-		<div class="slide loading">
-			<div class="caption"></div>
-			<div class="image" style="background-position: center center;"></div>
+	<!-- 移动端专属全屏 Viewer -->
+	<div id="mobile-viewer">
+		<button class="mv-close" onclick="closeMobileViewer()">&times;</button>
+		<img id="mv-img" src="" alt="" />
+		<div class="mv-controls">
+			<div class="mv-btn" onclick="mvPrev()">❮</div>
+			<div class="mv-btn" onclick="mvNext()">❯</div>
 		</div>
 	</div>
 
 	<!-- 管理模态框 -->
 	<div id="upload-modal">
-		<div id="upload-panel">
+		<div id="upload-panel" style="position:relative;">
 			<button id="close-modal">&times;</button>
 			<h3>🔧 作品集管理</h3>
 			<div style="text-align: left;">
-				<label>🔑 GitHub Token <span class="hint">（自动保存）</span></label>
+				<label>🔑 GitHub Token</label>
 				<input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxx" />
 				<button onclick="saveToken()" style="width:auto; padding:8px 20px;">保存 Token</button>
 			</div>
-			<hr style="border-color:#444; margin: 15px 0;">
+			<hr style="border-color:#333; margin: 15px 0;">
 			<div style="text-align: left;">
 				<label>📁 当前分类</label>
 				<select id="category-select"></select>
@@ -186,15 +238,14 @@
 					<button onclick="addCategory()" style="width:auto; padding:8px 15px;">创建</button>
 				</div>
 			</div>
-			<hr style="border-color:#444; margin: 15px 0;">
+			<hr style="border-color:#333; margin: 15px 0;">
 			<div style="text-align: left;">
 				<label>🖼️ 选择图片（可多选）</label>
 				<input type="file" id="file-input" accept="image/*" multiple />
 			</div>
 			<button onclick="uploadImages()">⬆️ 上传所有选中图片</button>
-			<hr style="border-color:#444; margin: 15px 0;">
-			<button class="danger-btn" onclick="deleteCategory()">🗑️ 删除当前分类（所有图片）</button>
-			<p style="margin-top:10px; font-size:0.8em; color:#888;">⚠️ 删除后不可恢复，请谨慎操作</p>
+			<hr style="border-color:#333; margin: 15px 0;">
+			<button class="danger-btn" onclick="deleteCategory()">🗑️ 删除当前分类</button>
 			<div id="upload-status"></div>
 		</div>
 	</div>
@@ -206,377 +257,243 @@
 	<script src="assets/js/main.js"></script>
 
 	<script>
-		// ========== 1. 仓库基础配置 ==========
+		// ========== 1. 基础配置与 Token ==========
 		const host = window.location.host;
 		const pathParts = window.location.pathname.split('/').filter(p => p);
-		let owner, repo;
-		if (host.endsWith('.github.io')) {
-			owner = host.split('.')[0];
-			repo = pathParts.length > 0 ? pathParts[0] : host;
-		} else {
-			owner = 'guguji305'; // 你的 GitHub 用户名
-			repo = 'guguji-ai';   // 你的仓库名
-		}
+		let owner = host.endsWith('.github.io') ? host.split('.')[0] : 'guguji305';
+		let repo = host.endsWith('.github.io') ? (pathParts[0] || host) : 'guguji-ai';
 		const branch = 'main';
-
 		const tokenKey = 'github_token_for_uploader';
+
 		function getToken() { return localStorage.getItem(tokenKey); }
 		function saveToken() {
 			const token = document.getElementById('token-input').value.trim();
-			if (token) {
-				localStorage.setItem(tokenKey, token);
-				alert('✅ Token 已保存！');
-				refreshCategoryList();
-			} else { alert('请输入有效的 Token'); }
+			if (token) { localStorage.setItem(tokenKey, token); alert('✅ Token 已保存！'); refreshCategoryList(); }
+			else alert('请输入 Token');
 		}
 
 		let currentCategory = 'sfw';
 		let categoryList = ['sfw', 'nsfw'];
 
-		// ========== 2. 分类与画廊数据加载 ==========
+		// ========== 2. 分类管理 ==========
 		async function fetchCategories() {
 			const token = getToken();
 			const headers = token ? { 'Authorization': `token ${token}` } : {};
-			const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
 			try {
-				const res = await fetch(url, { headers });
+				const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`, { headers });
 				if (!res.ok) return JSON.parse(localStorage.getItem('custom_categories') || '["sfw","nsfw"]');
 				const data = await res.json();
 				const dirs = [];
-				if (data.tree) {
-					data.tree.forEach(item => {
-						if (item.path.startsWith('images/')) {
-							const parts = item.path.split('/');
-							if (parts.length >= 2 && parts[1] && !dirs.includes(parts[1])) dirs.push(parts[1]);
-						}
-					});
-				}
+				if (data.tree) data.tree.forEach(item => {
+					if (item.path.startsWith('images/')) {
+						const parts = item.path.split('/');
+						if (parts.length >= 2 && parts[1] && !dirs.includes(parts[1])) dirs.push(parts[1]);
+					}
+				});
 				if (!dirs.includes('sfw')) dirs.unshift('sfw');
 				if (!dirs.includes('nsfw')) dirs.unshift('nsfw');
-				return dirs.length ? dirs : ['sfw', 'nsfw'];
-			} catch (e) {
-				return JSON.parse(localStorage.getItem('custom_categories') || '["sfw","nsfw"]');
-			}
+				return dirs;
+			} catch (e) { return JSON.parse(localStorage.getItem('custom_categories') || '["sfw","nsfw"]'); }
 		}
 
 		async function refreshCategoryList() {
-			let categories = await fetchCategories();
-			if (!categories || !Array.isArray(categories) || categories.length === 0) categories = ['sfw', 'nsfw'];
-			categoryList = categories;
-			localStorage.setItem('custom_categories', JSON.stringify(categories));
-			
+			categoryList = await fetchCategories();
+			localStorage.setItem('custom_categories', JSON.stringify(categoryList));
 			const select = document.getElementById('category-select');
 			select.innerHTML = '';
-			categories.forEach(cat => {
+			categoryList.forEach(cat => {
 				const opt = document.createElement('option');
-				opt.value = cat;
-				opt.textContent = cat === 'nsfw' ? '🔞 NSFW' : cat;
+				opt.value = cat; opt.textContent = cat === 'nsfw' ? '🔞 NSFW' : cat;
 				select.appendChild(opt);
 			});
-			renderCategoryTabs(categories);
-			if (!categories.includes(currentCategory) || !currentCategory) currentCategory = categories[0];
+			renderCategoryTabs();
+			if (!categoryList.includes(currentCategory)) currentCategory = categoryList[0];
 			loadGallery(currentCategory);
 		}
 
 		function addCategory() {
-			const input = document.getElementById('new-category-input');
-			const name = input.value.trim().toLowerCase().replace(/\s+/g, '_');
-			if (!name) return alert('请输入分类名称');
-			if (categoryList.includes(name)) return alert('此分类已存在');
+			const name = document.getElementById('new-category-input').value.trim().toLowerCase().replace(/\s+/g, '_');
+			if (!name) return alert('请输入名称');
+			if (categoryList.includes(name)) return alert('已存在');
 			categoryList.push(name);
 			localStorage.setItem('custom_categories', JSON.stringify(categoryList));
 			const select = document.getElementById('category-select');
-			const opt = document.createElement('option');
-			opt.value = name; opt.textContent = name;
+			const opt = document.createElement('option'); opt.value = name; opt.textContent = name;
 			select.appendChild(opt); select.value = name;
-			renderCategoryTabs(categoryList); input.value = '';
+			renderCategoryTabs(); document.getElementById('new-category-input').value = '';
 		}
 
-		function renderCategoryTabs(categories) {
+		function renderCategoryTabs() {
 			const container = document.getElementById('category-tabs');
 			container.innerHTML = '';
-			categories.forEach(cat => {
+			categoryList.forEach(cat => {
 				const btn = document.createElement('button');
 				btn.textContent = cat === 'nsfw' ? '🔞 NSFW' : cat;
 				btn.className = (cat === currentCategory) ? 'active' : '';
 				if (cat === 'nsfw') btn.classList.add('nsfw-tab');
-				btn.onclick = () => switchCategory(cat);
+				btn.onclick = () => { currentCategory = cat; renderCategoryTabs(); loadGallery(cat); };
 				container.appendChild(btn);
 			});
 		}
 
-		function switchCategory(category) {
-			if (!category || !categoryList.includes(category)) category = categoryList[0];
-			currentCategory = category;
-			document.querySelectorAll('#category-tabs button').forEach(btn => {
-				btn.classList.remove('active');
-				if (btn.textContent === (category === 'nsfw' ? '🔞 NSFW' : category)) btn.classList.add('active');
-			});
-			loadGallery(category);
-		}
-
-		// ========== 3. 渲染画廊 (核心) ==========
-		let currentGalleryImages = []; // 存储当前分类图片，用于 Viewer 翻页
+		// ========== 3. 画廊加载与幻灯片逻辑 ==========
+		let imageUrls = [], imageNames = [], currentIndex = 0, slideshowTimer = null, isFixed = false;
+		const isMobile = window.innerWidth <= 900;
 
 		async function loadGallery(category) {
-			if (!category) category = currentCategory || 'sfw';
 			const container = document.getElementById('gallery-container');
-			container.innerHTML = '<p style="text-align:center; padding:3em; color:#888;">⏳ 加载中...</p>';
-			currentGalleryImages = []; // 清空旧数据
-			
-			const token = getToken();
-			const headers = token ? { 'Authorization': `token ${token}` } : {};
+			container.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color:#666;">⏳ 加载中...</p>';
+			const headers = getToken() ? { 'Authorization': `token ${getToken()}` } : {};
 			
 			try {
-				const url = `https://api.github.com/repos/${owner}/${repo}/contents/images/${category}`;
-				const res = await fetch(url, { headers });
-				if (!res.ok) {
-					if (res.status === 404) {
-						container.innerHTML = '<p style="text-align:center; padding:3em; color:#888;">这个作品集还是空的，快去上传吧！</p>';
-						return;
-					}
-					throw new Error(`读取失败 (${res.status})`);
-				}
+				const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/images/${category}`, { headers });
+				if (!res.ok) { container.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color:#666;">暂无作品</p>'; imageUrls=[]; startSlideshow(); return; }
 				const files = await res.json();
-				const imageFiles = files.filter(f => f.type === 'file' && f.name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i));
+				const imgs = files.filter(f => f.type === 'file' && f.name.match(/\.(jpg|jpeg|png|gif|webp)$/i));
 				
 				container.innerHTML = '';
-				if (imageFiles.length === 0) {
-					container.innerHTML = '<p style="text-align:center; padding:3em; color:#888;">暂无图片</p>';
-					return;
-				}
+				if (imgs.length === 0) { container.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color:#666;">暂无图片</p>'; imageUrls=[]; startSlideshow(); return; }
 
-				imageFiles.forEach(file => {
-					if (!file.download_url) return;
+				imageUrls = imgs.map(f => f.download_url);
+				imageNames = imgs.map(f => f.name.replace(/\.[^/.]+$/, "").replace(/_/g, ' '));
+				currentIndex = 0;
+
+				imgs.forEach((file, i) => {
+					const w = document.createElement('div'); w.className = 'img-wrapper';
+					const img = document.createElement('img'); img.src = file.download_url; img.loading = 'lazy';
 					
-					const cleanTitle = file.name.replace(/\.[^/.]+$/, "").replace(/_/g, ' ');
-					currentGalleryImages.push({ url: file.download_url, title: cleanTitle });
-					
-					const article = document.createElement('article');
-					const a = document.createElement('a');
-					a.className = 'thumbnail';
-					a.href = file.download_url; 
-					
-					const img = document.createElement('img');
-					img.src = file.download_url;
-					img.alt = file.name;
-					img.loading = 'lazy';
-					a.appendChild(img);
-					
-					const h2 = document.createElement('h2');
-					h2.textContent = cleanTitle;
-					
-					const delBtn = document.createElement('button');
-					delBtn.className = 'delete-img-btn';
-					delBtn.innerHTML = '✕';
-					delBtn.onclick = (e) => {
-						e.preventDefault(); e.stopPropagation();
-						deleteImage(file.path, file.sha, file.name);
+					const del = document.createElement('button'); del.className = 'delete-img-btn'; del.innerHTML = '✕';
+					del.onclick = (e) => { e.stopPropagation(); deleteImage(file.path, file.sha, file.name); };
+
+					w.onclick = () => {
+						if (isMobile) openMobileViewer(i); // 移动端弹窗
+						else fixImage(i);                 // PC端固定左侧大图
 					};
-					
-					article.appendChild(a);
-					article.appendChild(h2);
-					article.appendChild(delBtn);
-					container.appendChild(article);
+
+					w.appendChild(img); w.appendChild(del); container.appendChild(w);
 				});
-			} catch (error) {
-				container.innerHTML = `<p style="text-align:center; padding:3em; color:red;">⚠️ ${error.message}</p>`;
-			}
+				startSlideshow();
+			} catch (e) { container.innerHTML = `<p style="color:red; grid-column: 1/-1;">⚠️ ${e.message}</p>`; }
 		}
 
-		// ========== 4. 图片与分类的增删 ==========
-		async function deleteImage(path, sha, fileName) {
-			if (!confirm(`确定要删除 "${fileName}" 吗？`)) return;
-			const token = getToken();
-			if (!token) return alert('请先保存 GitHub Token');
-			try {
-				const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
-					method: 'DELETE',
-					headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
-					body: JSON.stringify({ message: `Delete ${fileName}`, sha, branch })
-				});
-				if (res.ok) { alert(`已删除 ${fileName}`); loadGallery(currentCategory); }
-				else { const err = await res.json(); alert(`删除失败：${err.message}`); }
-			} catch (error) { alert(`网络错误：${error.message}`); }
+		function startSlideshow() {
+			isFixed = false;
+			document.getElementById('resume-slideshow').style.display = 'none';
+			if (slideshowTimer) clearInterval(slideshowTimer);
+			if (imageUrls.length === 0) { document.getElementById('viewer-img').src = ''; return; }
+			
+			showImage(currentIndex);
+			slideshowTimer = setInterval(() => {
+				currentIndex = (currentIndex + 1) % imageUrls.length;
+				showImage(currentIndex);
+			}, 4000);
+		}
+
+		function showImage(i) {
+			const img = document.getElementById('viewer-img');
+			const cap = document.getElementById('viewer-caption');
+			img.style.opacity = 0;
+			setTimeout(() => {
+				img.src = imageUrls[i]; cap.textContent = imageNames[i]; img.style.opacity = 1;
+				highlightThumb(i);
+				const next = new Image(); next.src = imageUrls[(i + 1) % imageUrls.length]; // 预加载
+			}, 300);
+		}
+
+		function fixImage(i) {
+			isFixed = true;
+			if (slideshowTimer) clearInterval(slideshowTimer);
+			currentIndex = i;
+			const img = document.getElementById('viewer-img');
+			const cap = document.getElementById('viewer-caption');
+			img.style.opacity = 0;
+			setTimeout(() => { img.src = imageUrls[i]; cap.textContent = imageNames[i]; img.style.opacity = 1; highlightThumb(i); }, 150);
+			document.getElementById('resume-slideshow').style.display = 'inline-block';
+		}
+
+		function highlightThumb(i) {
+			document.querySelectorAll('.img-wrapper').forEach((w, idx) => w.classList.toggle('active', idx === i));
+		}
+
+		document.getElementById('resume-slideshow').onclick = startSlideshow;
+
+		// ========== 4. 移动端全屏 Viewer 逻辑 ==========
+		let mvIndex = 0;
+		function openMobileViewer(i) {
+			mvIndex = i;
+			document.getElementById('mv-img').src = imageUrls[i];
+			document.getElementById('mobile-viewer').classList.add('active');
+		}
+		function closeMobileViewer() { document.getElementById('mobile-viewer').classList.remove('active'); }
+		function mvNext() { mvIndex = (mvIndex + 1) % imageUrls.length; document.getElementById('mv-img').src = imageUrls[mvIndex]; }
+		function mvPrev() { mvIndex = (mvIndex - 1 + imageUrls.length) % imageUrls.length; document.getElementById('mv-img').src = imageUrls[mvIndex]; }
+
+		// ========== 5. 增删改 API ==========
+		async function deleteImage(path, sha, name) {
+			if (!confirm(`删除 ${name}？`)) return;
+			const token = getToken(); if (!token) return alert('需 Token');
+			const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+				method: 'DELETE', headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+				body: JSON.stringify({ message: `Delete ${name}`, sha, branch })
+			});
+			if (res.ok) { alert('已删除'); loadGallery(currentCategory); } else alert('删除失败');
 		}
 
 		async function deleteCategory() {
-			const category = document.getElementById('category-select').value;
-			if (!confirm(`⚠️ 将删除“${category}”所有图片！确定继续吗？`)) return;
-			const token = getToken();
-			if (!token) return alert('请先保存 GitHub Token');
-			const status = document.getElementById('upload-status');
-			status.textContent = `🗑️ 正在删除...`;
-			try {
-				const listRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/images/${category}`, {
-					headers: { 'Authorization': `token ${token}` }
+			const cat = document.getElementById('category-select').value;
+			if (!confirm(`删除 ${cat} 所有图片？`)) return;
+			const token = getToken(); if (!token) return alert('需 Token');
+			const status = document.getElementById('upload-status'); status.textContent = '🗑️ 删除中...';
+			const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/images/${cat}`, { headers: { 'Authorization': `token ${token}` } });
+			const files = await res.json();
+			let del = 0;
+			for (const f of files) {
+				const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${f.path}`, {
+					method: 'DELETE', headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+					body: JSON.stringify({ message: `Delete ${f.name}`, sha: f.sha, branch })
 				});
-				if (!listRes.ok) throw new Error(`无法获取文件列表`);
-				const files = await listRes.json();
-				if (!Array.isArray(files) || files.length === 0) { status.textContent = '✅ 分类已空。'; await refreshCategoryList(); return; }
-				let deleted = 0;
-				for (const file of files) {
-					const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${file.path}`, {
-						method: 'DELETE',
-						headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
-						body: JSON.stringify({ message: `Delete ${file.name}`, sha: file.sha, branch })
-					});
-					if (res.ok) deleted++;
-				}
-				status.textContent = `✅ 已删除 ${deleted}/${files.length} 个文件。`;
-				await refreshCategoryList();
-			} catch (error) { status.textContent = `❌ 失败：${error.message}`; }
+				if (r.ok) del++;
+			}
+			status.textContent = `✅ 已删除 ${del} 个文件`; refreshCategoryList();
 		}
 
 		async function uploadImages() {
-			const token = getToken();
-			if (!token) return alert('请先保存 Token！');
-			const fileInput = document.getElementById('file-input');
-			const category = document.getElementById('category-select').value;
+			const token = getToken(); if (!token) return alert('需 Token');
+			const files = document.getElementById('file-input').files;
+			const cat = document.getElementById('category-select').value;
 			const status = document.getElementById('upload-status');
-			if (!fileInput.files || fileInput.files.length === 0) return alert('请选择图片');
-			status.innerHTML = `⏳ 正在上传 ${fileInput.files.length} 个文件...`;
+			if (!files.length) return alert('选图片');
+			status.innerHTML = '⏳ 上传中...';
 			const results = [];
-			for (let i = 0; i < fileInput.files.length; i++) {
-				const file = fileInput.files[i];
-				const fileName = file.name.replace(/\s+/g, '_');
-				const path = `images/${category}/${fileName}`;
-				status.innerHTML = `⏳ 上传中 (${i+1}/${fileInput.files.length}): ${fileName}`;
-				try {
-					const content = await readFileAsBase64(file);
-					const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
-						method: 'PUT',
-						headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
-						body: JSON.stringify({ message: `Upload ${fileName}`, content, branch })
-					});
-					if (res.ok) results.push(`✅ ${fileName}`);
-					else { const err = await res.json(); results.push(`❌ ${fileName}: ${err.message}`); }
-				} catch (error) { results.push(`❌ ${fileName}: ${error.message}`); }
+			for (let i = 0; i < files.length; i++) {
+				const f = files[i], name = f.name.replace(/\s+/g, '_');
+				status.innerHTML = `⏳ ${i+1}/${files.length}: ${name}`;
+				const b64 = await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result.split(',')[1]); rd.readAsDataURL(f); });
+				const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/images/${cat}/${name}`, {
+					method: 'PUT', headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+					body: JSON.stringify({ message: `Upload ${name}`, content: b64, branch })
+				});
+				results.push(res.ok ? `✅ ${name}` : `❌ ${name}`);
 			}
-			status.innerHTML = results.join('<br>');
-			await refreshCategoryList();
-			loadGallery(category);
-			fileInput.value = '';
+			status.innerHTML = results.join('<br>'); refreshCategoryList(); loadGallery(cat);
+			document.getElementById('file-input').value = '';
 		}
 
-		function readFileAsBase64(file) {
-			return new Promise((resolve, reject) => {
-				const reader = new FileReader();
-				reader.onload = () => resolve(reader.result.split(',')[1]);
-				reader.onerror = reject;
-				reader.readAsDataURL(file);
-			});
-		}
-
-		// ========== 5. 查看器控制 (完全接管，修复翻页与移动端适配) ==========
-		let currentImageIndex = 0;
-
-		function openViewer(index) {
-			if (index < 0 || index >= currentGalleryImages.length) return;
-			currentImageIndex = index;
-			
-			const viewer = document.getElementById('viewer');
-			const slide = viewer.querySelector('.slide');
-			const imageDiv = slide.querySelector('.image');
-			const caption = slide.querySelector('.caption');
-			
-			const imgData = currentGalleryImages[currentImageIndex];
-			imageDiv.style.backgroundImage = `url('${imgData.url}')`;
-			if (caption) caption.innerHTML = imgData.title ? `<h2>${imgData.title}</h2>` : '';
-			
-			slide.classList.remove('loading');
-			viewer.classList.add('active');
-			document.body.classList.add('is-viewer-active');
-		}
-
-		function closeViewer() {
-			const viewer = document.getElementById('viewer');
-			if (!viewer.classList.contains('active')) return;
-			viewer.classList.remove('active');
-			document.body.classList.remove('is-viewer-active');
-			setTimeout(() => {
-				const imageDiv = viewer.querySelector('.slide .image');
-				if (imageDiv) imageDiv.style.backgroundImage = 'none';
-				const slide = viewer.querySelector('.slide');
-				if (slide) slide.classList.add('loading');
-			}, 500);
-		}
-
-		function nextImage() {
-			let nextIndex = currentImageIndex + 1;
-			if (nextIndex >= currentGalleryImages.length) nextIndex = 0;
-			openViewer(nextIndex);
-		}
-
-		function prevImage() {
-			let prevIndex = currentImageIndex - 1;
-			if (prevIndex < 0) prevIndex = currentGalleryImages.length - 1;
-			openViewer(prevIndex);
-		}
-
-		// 事件绑定：缩略图点击
-		document.getElementById('gallery-container').addEventListener('click', function(e) {
-			if (e.target.closest('.delete-img-btn')) return; // 忽略删除按钮
-			const article = e.target.closest('article');
-			if (!article) return;
-			
-			e.preventDefault(); 
-			e.stopPropagation();
-			
-			const articles = Array.from(this.querySelectorAll('article'));
-			const index = articles.indexOf(article);
-			if (index !== -1) openViewer(index);
-		});
-
-		// 事件绑定：Viewer 内部按钮
-		document.querySelector('#viewer .nav-next').addEventListener('click', (e) => { e.stopPropagation(); nextImage(); });
-		document.querySelector('#viewer .nav-previous').addEventListener('click', (e) => { e.stopPropagation(); prevImage(); });
-		document.querySelector('#viewer .toggle').addEventListener('click', closeViewer);
-		
-		// 事件绑定：点击 Viewer 空白处关闭
-		document.querySelector('#viewer .inner').addEventListener('click', function(e) {
-			if (e.target === this) closeViewer(); 
-		});
-
-		// 事件绑定：键盘控制
-		window.addEventListener('keydown', function(e) {
-			const viewer = document.getElementById('viewer');
-			if (!viewer.classList.contains('active')) return;
-			if (e.key === 'Escape') closeViewer();
-			if (e.key === 'ArrowRight') nextImage();
-			if (e.key === 'ArrowLeft') prevImage();
-		});
-
-		// ========== 6. 管理模态框控制 ==========
+		// ========== 6. 管理面板与初始化 ==========
 		const modal = document.getElementById('upload-modal');
-		function openAdminPanel() {
-			modal.classList.add('active');
-			document.body.classList.add('admin-mode');
-			refreshCategoryList();
-		}
-		function closeAdminPanel() {
-			modal.classList.remove('active');
-			document.body.classList.remove('admin-mode');
-		}
-		document.getElementById('close-modal').addEventListener('click', closeAdminPanel);
-		modal.addEventListener('click', e => { if (e.target === modal) closeAdminPanel(); });
-		
-		// 快捷键 Ctrl+Shift+U 打开管理面板
+		document.getElementById('close-modal').onclick = () => { modal.classList.remove('active'); document.body.classList.remove('admin-mode'); };
 		window.addEventListener('keydown', e => {
 			if (e.ctrlKey && e.shiftKey && e.key === 'U') {
 				e.preventDefault();
-				modal.classList.contains('active') ? closeAdminPanel() : openAdminPanel();
+				modal.classList.toggle('active'); document.body.classList.toggle('admin-mode');
+				if (modal.classList.contains('active')) refreshCategoryList();
 			}
+			if (e.key === 'Escape') closeMobileViewer();
 		});
 
-		// ========== 7. 初始化 ==========
 		window.addEventListener('load', async () => {
-			const savedToken = localStorage.getItem(tokenKey);
-			if (savedToken) document.getElementById('token-input').value = savedToken;
+			const t = localStorage.getItem(tokenKey); if (t) document.getElementById('token-input').value = t;
 			await refreshCategoryList();
-			if (!categoryList.includes(currentCategory)) currentCategory = categoryList[0] || 'sfw';
-			switchCategory(currentCategory);
-			closeViewer();
 		});
 	</script>
 </body>
