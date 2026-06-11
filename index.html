@@ -7,73 +7,7 @@
 	<link rel="stylesheet" href="assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 	<style>
-		/* ===== 整体布局：左侧查看器 + 右侧内容 ===== */
-		#main {
-			display: flex;
-			flex-direction: row;
-			min-height: 100vh;
-		}
-		/* 左侧查看器 */
-		#viewer-panel {
-			flex: 0 0 50%;
-			max-width: 50%;
-			position: sticky;
-			top: 0;
-			height: 100vh;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			background: #111;
-			color: white;
-			padding: 20px;
-			box-sizing: border-box;
-			overflow: hidden;
-		}
-		#viewer-panel img {
-			max-width: 90%;
-			max-height: 80vh;
-			object-fit: contain;
-			border-radius: 8px;
-			transition: opacity 0.2s;
-		}
-		#viewer-panel .nav-buttons {
-			margin-top: 15px;
-			display: flex;
-			gap: 20px;
-		}
-		#viewer-panel .nav-buttons button {
-			background: rgba(255,255,255,0.2);
-			border: none;
-			color: white;
-			font-size: 2em;
-			padding: 10px 20px;
-			border-radius: 8px;
-			cursor: pointer;
-			transition: background 0.2s;
-		}
-		#viewer-panel .nav-buttons button:hover {
-			background: rgba(255,255,255,0.4);
-		}
-		#viewer-panel .image-counter {
-			margin-top: 10px;
-			font-size: 0.9em;
-			opacity: 0.7;
-		}
-		#viewer-panel .placeholder {
-			font-size: 1.4em;
-			opacity: 0.5;
-			text-align: center;
-		}
-
-		/* 右侧内容区域 */
-		#right-content {
-			flex: 1;
-			overflow-y: auto;
-			height: 100vh;
-		}
-
-		/* 原样式保持不变（稍作适配） */
+		/* ===== 原有分类标签栏 ===== */
 		#category-tabs {
 			text-align: center;
 			margin: 2em 0 0.5em;
@@ -103,6 +37,7 @@
 			background: red;
 		}
 
+		/* ===== 画廊图片容器 ===== */
 		.gallery {
 			display: flex;
 			flex-wrap: wrap;
@@ -122,6 +57,7 @@
 			border-radius: 10px;
 			box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 		}
+		/* 删除按钮（默认隐藏，管理模式显示） */
 		.delete-img-btn {
 			position: absolute;
 			top: 8px;
@@ -143,6 +79,7 @@
 			display: block;
 		}
 
+		/* ===== 上传模态框 ===== */
 		#upload-modal {
 			display: none;
 			position: fixed;
@@ -202,50 +139,117 @@
 		.danger-btn:hover {
 			background: #e74c3c !important;
 		}
+
+		/* ========== 新添加：左侧固定查看器 ========== */
+		#viewer {
+			position: fixed;
+			left: 0;
+			top: 0;
+			width: 50vw;
+			height: 100vh;
+			background: #0b0b0b;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			z-index: 100;
+			padding: 20px;
+			box-sizing: border-box;
+		}
+		#viewer img {
+			max-width: 90%;
+			max-height: 80vh;
+			object-fit: contain;
+			border-radius: 8px;
+			transition: opacity 0.2s;
+		}
+		#viewer .placeholder {
+			color: #aaa;
+			font-size: 1.4em;
+			opacity: 0.6;
+			text-align: center;
+		}
+		#viewer .nav-buttons {
+			margin-top: 15px;
+			display: flex;
+			gap: 20px;
+		}
+		#viewer .nav-buttons button {
+			background: rgba(255,255,255,0.15);
+			border: none;
+			color: white;
+			font-size: 2em;
+			padding: 8px 18px;
+			border-radius: 8px;
+			cursor: pointer;
+			transition: background 0.2s;
+		}
+		#viewer .nav-buttons button:hover {
+			background: rgba(255,255,255,0.3);
+		}
+		#viewer .image-counter {
+			margin-top: 10px;
+			color: #ccc;
+			font-size: 0.9em;
+		}
+
+		/* 为右侧内容留出查看器的空间 */
+		body {
+			margin-left: 50vw;
+			transition: margin-left 0.3s;
+		}
+
+		/* 移动端：查看器自动隐藏，内容全宽 */
+		@media (max-width: 768px) {
+			#viewer {
+				display: none;
+			}
+			body {
+				margin-left: 0;
+			}
+		}
 	</style>
 </head>
 <body>
 
 	<div id="main">
 
-		<!-- ========== 左侧固定查看器 ========== -->
-		<div id="viewer-panel">
-			<img id="viewer-image" src="" alt="" style="display:none;" />
-			<div id="viewer-placeholder" class="placeholder">点击分类查看作品</div>
-			<div class="nav-buttons" style="display:none;" id="nav-buttons">
-				<button id="prev-btn">◀</button>
-				<button id="next-btn">▶</button>
+		<header id="header">
+			<h1>咕咕鸡<br />AI 绘画作品仓库</h1>
+			<p>有好的作品会保存在这<br />有时间就更新</p>
+		</header>
+
+		<!-- 动态分类标签栏 -->
+		<div id="category-tabs"></div>
+
+		<!-- 统一画廊 -->
+		<section style="text-align: center; padding-top: 0.5em;">
+			<div class="gallery" id="gallery-container">
+				<p>⏳ 加载作品中...</p>
 			</div>
-			<div class="image-counter" id="image-counter" style="display:none;"></div>
+		</section>
+
+		<footer id="footer">
+			<h2>联系我</h2>
+			<p>对作品感兴趣？一起合作？发邮件或社交媒体找我。</p>
+			<div>
+				<a href="mailto:1599316531@qq.com">📧 邮箱</a>
+				<a href="https://twitter.com/youraccount">🐦 Twitter</a>
+				<a href="https://www.instagram.com/youraccount">📷 Instagram</a>
+			</div>
+		</footer>
+
+	</div>
+
+	<!-- ========== 左侧固定查看器（在 main 外部） ========== -->
+	<div id="viewer">
+		<img id="viewer-image" src="" alt="" style="display:none;" />
+		<div id="viewer-placeholder" class="placeholder">点击分类查看作品</div>
+		<div class="nav-buttons" id="nav-buttons" style="display:none;">
+			<button id="prev-btn">◀</button>
+			<button id="next-btn">▶</button>
 		</div>
-
-		<!-- ========== 右侧内容区域 ========== -->
-		<div id="right-content">
-			<header id="header">
-				<h1>咕咕鸡<br />AI 绘画作品仓库</h1>
-				<p>有好的作品会保存在这<br />有时间就更新</p>
-			</header>
-
-			<!-- 动态分类标签栏 -->
-			<div id="category-tabs"></div>
-
-			<!-- 统一画廊 -->
-			<section style="text-align: center; padding-top: 0.5em;">
-				<div class="gallery" id="gallery-container">
-					<p>⏳ 加载作品中...</p>
-				</div>
-			</section>
-
-			<footer id="footer">
-				<h2>联系我</h2>
-				<p>对作品感兴趣？一起合作？发邮件或社交媒体找我。</p>
-				<div>
-					<a href="mailto:1599316531@qq.com">📧 邮箱</a>
-					<a href="https://twitter.com/youraccount">🐦 Twitter</a>
-					<a href="https://www.instagram.com/youraccount">📷 Instagram</a>
-				</div>
-			</footer>
-		</div>
+		<div class="image-counter" id="image-counter" style="display:none;"></div>
 	</div>
 
 	<!-- 隐藏的上传 + 管理模态框 -->
@@ -253,12 +257,17 @@
 		<div id="upload-panel">
 			<button id="close-modal">&times;</button>
 			<h3>🔧 作品集管理</h3>
+
+			<!-- Token -->
 			<div style="text-align: left;">
 				<label>🔑 GitHub Token <span class="hint">（自动保存）</span></label>
 				<input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxx" />
 				<button onclick="saveToken()" style="width:auto; padding:6px 15px;">保存</button>
 			</div>
+
 			<hr>
+
+			<!-- 分类创建 -->
 			<div style="text-align: left;">
 				<label>📁 当前分类</label>
 				<select id="category-select"></select>
@@ -267,15 +276,22 @@
 					<button onclick="addCategory()" style="width:auto; padding:6px 12px;">创建</button>
 				</div>
 			</div>
+
 			<hr>
+
+			<!-- 上传 -->
 			<div style="text-align: left;">
 				<label>🖼️ 选择图片（可多选）</label>
 				<input type="file" id="file-input" accept="image/*" multiple />
 			</div>
 			<button onclick="uploadImages()">⬆️ 上传所有选中图片</button>
+
 			<hr>
+
+			<!-- 危险操作：删除分类 -->
 			<button class="danger-btn" onclick="deleteCategory()">🗑️ 删除当前分类（所有图片）</button>
 			<p style="margin-top:10px; font-size:0.8em; color:#666;">⚠️ 删除后不可恢复，请谨慎操作</p>
+
 			<p id="upload-status" style="margin-top:10px; font-size:0.9em; color:#333;"></p>
 		</div>
 	</div>
@@ -294,10 +310,11 @@
 			owner = host.split('.')[0];
 			repo = pathParts.length > 0 ? pathParts[0] : host;
 		} else {
+			// 自定义域名请修改这里！
 			owner = 'guguji305';
 			repo = 'guguji-ai';
 		}
-		const branch = 'main';
+		const branch = 'main';   // 如果不是 main 分支请改成 master
 
 		// ========== Token ==========
 		const tokenKey = 'github_token_for_uploader';
@@ -313,21 +330,23 @@
 			}
 		}
 
-		// ========== 查看器相关变量 ==========
+		// ========== 查看器状态 ==========
 		let currentCategory = 'sfw';
 		let categoryList = ['sfw', 'nsfw'];
-		let categoryImages = [];                // 当前分类的图片对象数组
-		let currentViewerIdx = -1;             // 查看器当前索引（-1 表示无显示）
+		let categoryImages = [];               // 当前分类的图片数组
+		let currentViewerIdx = -1;             // 查看器当前索引
 
-		// ========== 查看器控制函数 ==========
+		// 查看器控制
 		function showImageViewer(index) {
 			if (!categoryImages.length) {
 				hideViewer();
 				return;
 			}
+			// 边界保护
 			if (index < 0) index = 0;
 			if (index >= categoryImages.length) index = categoryImages.length - 1;
 			currentViewerIdx = index;
+
 			const img = categoryImages[index];
 			document.getElementById('viewer-image').src = img.download_url;
 			document.getElementById('viewer-image').style.display = 'block';
@@ -351,11 +370,6 @@
 			showImageViewer(currentViewerIdx);
 		}
 
-		// 缩略图点击事件（在加载画廊时绑定）
-		function openViewerFromThumb(index) {
-			showImageViewer(index);
-		}
-
 		// 绑定左右箭头
 		document.getElementById('prev-btn').addEventListener('click', () => navigateViewer(-1));
 		document.getElementById('next-btn').addEventListener('click', () => navigateViewer(1));
@@ -364,6 +378,7 @@
 		async function fetchCategories() {
 			const token = getToken();
 			const headers = token ? { 'Authorization': `token ${token}` } : {};
+			// 使用 Git Tree API 获取所有 images/ 下的第一层目录
 			const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
 			try {
 				const res = await fetch(url, { headers });
@@ -406,6 +421,7 @@
 			});
 
 			renderCategoryTabs(categories);
+
 			if (!categories.includes(currentCategory)) {
 				currentCategory = categories[0];
 			}
@@ -456,12 +472,12 @@
 			loadGallery(category);
 		}
 
-		// ========== 画廊加载（附带查看器联动） ==========
+		// ========== 画廊加载（联动查看器） ==========
 		async function loadGallery(category) {
 			const container = document.getElementById('gallery-container');
 			container.innerHTML = '<p>⏳ 加载中...</p>';
 
-			// 清除左侧查看器当前状态
+			// 重置查看器数据
 			categoryImages = [];
 			hideViewer();
 
@@ -489,13 +505,15 @@
 					container.innerHTML = '<p>暂无图片</p>';
 					return;
 				}
+
 				// 保存当前分类图片数组
 				categoryImages = imageFiles;
-				// 显示第一张到查看器
+				// 默认显示第一张到查看器
 				if (categoryImages.length > 0) {
 					showImageViewer(0);
 				}
-				// 构建缩略图网格
+
+				// 构建缩略图
 				imageFiles.forEach((file, idx) => {
 					const wrapper = document.createElement('div');
 					wrapper.className = 'img-wrapper';
@@ -504,8 +522,8 @@
 					img.src = file.download_url;
 					img.alt = file.name;
 					img.loading = 'lazy';
-					// 点击缩略图跳转查看器
-					img.addEventListener('click', () => openViewerFromThumb(idx));
+					// 点击缩略图 → 打开查看器对应图片
+					img.addEventListener('click', () => showImageViewer(idx));
 
 					const delBtn = document.createElement('button');
 					delBtn.className = 'delete-img-btn';
