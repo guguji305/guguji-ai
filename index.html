@@ -11,6 +11,22 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+		<style>
+			/* 新画廊的样式 */
+			.gallery {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10px;
+				justify-content: center;
+				margin-top: 1em;
+			}
+			.gallery img {
+				max-width: 300px;
+				height: auto;
+				border-radius: 8px;
+				box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+			}
+		</style>
 	</head>
 	<body class="is-preload-0 is-preload-1 is-preload-2">
 
@@ -28,7 +44,7 @@
 						</ul>
 					</header>
 
-				<!-- Thumbnail -->
+				<!-- Thumbnail（原模板的缩略图区域，你可以保留，这里暂时用占位图） -->
 					<section id="thumbnails">
 						<article>
 							<a class="thumbnail" href="images/fulls/01.jpg" data-position="left center"><img src="images/thumbs/01.jpg" alt="" /></a>
@@ -92,6 +108,33 @@
 						</article>
 					</section>
 
+				<!-- 正常作品板块 -->
+				<section id="sfw-gallery" style="padding: 2em; text-align: center;">
+					<h2>🖼️ 正常作品</h2>
+					<div class="gallery">
+						<!-- ⚠️ 把下面的文件名改成你实际上传的图片文件名 -->
+						<img src="images/sfw/图片1.jpg" alt="正常作品1">
+						<img src="images/sfw/图片2.jpg" alt="正常作品2">
+						<!-- 需要更多图片就继续复制上行，改 src -->
+					</div>
+				</section>
+
+				<!-- NSFW 查看按钮 -->
+				<div style="text-align: center; margin: 2em;">
+					<button id="show-nsfw" onclick="showNsfw()" style="padding: 10px 20px; font-size: 16px;">
+						🔞 查看 NSFW 作品（需成年）
+					</button>
+				</div>
+
+				<!-- NSFW 作品板块（默认隐藏） -->
+				<section id="nsfw-gallery" style="display: none; padding: 2em; text-align: center;">
+					<h2>🔞 NSFW 作品</h2>
+					<div class="gallery">
+						<img src="images/nsfw/图片1.jpg" alt="NSFW作品1">
+						<!-- 继续添加 -->
+					</div>
+				</section>
+
 				<!-- Footer -->
 					<footer id="footer">
 						<h2>联系我</h2>
@@ -105,11 +148,19 @@
 
 			</div>
 
-		<!-- Scripts -->
-			<script src="assets/js/jquery.min.js"></script>
-			<script src="assets/js/browser.min.js"></script>
-			<script src="assets/js/breakpoints.min.js"></script>
-			<script src="assets/js/main.js"></script>
+		<!-- Scripts（原模板的） -->
+		<script src="assets/js/jquery.min.js"></script>
+		<script src="assets/js/browser.min.js"></script>
+		<script src="assets/js/breakpoints.min.js"></script>
+		<script src="assets/js/main.js"></script>
+
+		<!-- NSFW 显示函数 -->
+		<script>
+			function showNsfw() {
+				document.getElementById('nsfw-gallery').style.display = 'block';
+				document.getElementById('show-nsfw').style.display = 'none';
+			}
+		</script>
 
 	</body>
 </html>
