@@ -7,26 +7,77 @@
 	<link rel="stylesheet" href="assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 	<style>
-		/* 强制显示上传区域 */
-		#upload-section {
+		/* 管理按钮 - 右下角极小半透明 */
+		#admin-trigger {
+			position: fixed;
+			bottom: 20px;
+			right: 20px;
+			z-index: 1000;
+			background: rgba(0,0,0,0.2);
+			color: rgba(255,255,255,0.4);
+			border: none;
+			border-radius: 50%;
+			width: 36px;
+			height: 36px;
+			font-size: 18px;
+			line-height: 36px;
+			text-align: center;
+			cursor: pointer;
+			transition: 0.3s;
+		}
+		#admin-trigger:hover {
+			background: rgba(0,0,0,0.5);
+			color: white;
+		}
+
+		/* 上传模态框 - 默认隐藏 */
+		#upload-modal {
+			display: none;
+			position: fixed;
+			top: 0; left: 0; width: 100%; height: 100%;
 			background: rgba(0,0,0,0.7);
-			color: #fff;
-			padding: 1.5em;
-			border-radius: 8px;
-			max-width: 500px;
-			margin: 2em auto;
+			z-index: 9999;
+			justify-content: center;
+			align-items: center;
+		}
+		#upload-modal.active {
+			display: flex;
+		}
+		#upload-panel {
+			background: #fff;
+			color: #333;
+			padding: 2em;
+			border-radius: 12px;
+			max-width: 420px;
+			width: 90%;
+			box-shadow: 0 15px 40px rgba(0,0,0,0.4);
 			text-align: center;
 			position: relative;
-			z-index: 999;
 		}
-		#upload-section input, #upload-section select, #upload-section button {
-			margin: 5px;
-			padding: 8px 12px;
-			border-radius: 4px;
+		#upload-panel input, #upload-panel select, #upload-panel button {
+			margin: 6px 0;
+			padding: 10px;
+			border-radius: 6px;
+			border: 1px solid #ccc;
+			width: 100%;
+			box-sizing: border-box;
+		}
+		#upload-panel button {
+			background: #222;
+			color: white;
+			cursor: pointer;
 			border: none;
+			font-weight: bold;
 		}
-		#token-input {
-			width: 70%;
+		#upload-panel button:hover { background: #444; }
+		#close-modal {
+			position: absolute;
+			top: 10px; right: 14px;
+			background: none;
+			border: none;
+			font-size: 24px;
+			color: #999;
+			cursor: pointer;
 		}
 		.gallery {
 			display: flex;
@@ -55,23 +106,6 @@
 				<li><a href="#sfw-gallery" class="arrow scrolly">往下看作品</a></li>
 			</ul>
 		</header>
-
-		<!-- 🔼 上传区域（现在会明显显示在 Header 下方） -->
-		<div id="upload-section">
-			<h3>📤 上传新作品</h3>
-			<p style="font-size:0.9em;">
-				首次使用需粘贴 GitHub Token（保存在本地）：<br>
-				<input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxx" />
-				<button onclick="saveToken()">保存 Token</button>
-			</p>
-			<input type="file" id="file-input" accept="image/*" />
-			<select id="category-select">
-				<option value="sfw">🖼️ 正常作品 (SFW)</option>
-				<option value="nsfw">🔞 NSFW 作品</option>
-			</select>
-			<button onclick="uploadImage()">上传图片</button>
-			<p id="upload-status" style="margin-top:10px; font-size:0.9em;"></p>
-		</div>
 
 		<!-- SFW 画廊 -->
 		<section id="sfw-gallery" style="padding: 2em; text-align: center;">
@@ -103,15 +137,38 @@
 
 	</div>
 
-	<!-- 必须的脚本 -->
+	<!-- 管理入口 - 右下角极简按钮 -->
+	<button id="admin-trigger" title="管理上传">🔧</button>
+
+	<!-- 隐藏的上传模态框 -->
+	<div id="upload-modal">
+		<div id="upload-panel">
+			<button id="close-modal">&times;</button>
+			<h3>📤 上传新作品</h3>
+			<p style="font-size:0.9em;">
+				首次使用需粘贴 GitHub Token（保存在本地）：
+			</p>
+			<input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxx" />
+			<button onclick="saveToken()">保存 Token</button>
+			<input type="file" id="file-input" accept="image/*" />
+			<select id="category-select">
+				<option value="sfw">🖼️ 正常作品 (SFW)</option>
+				<option value="nsfw">🔞 NSFW 作品</option>
+			</select>
+			<button onclick="uploadImage()">上传图片</button>
+			<p id="upload-status" style="margin-top:10px; font-size:0.9em; color:#333;"></p>
+		</div>
+	</div>
+
+	<!-- 必须脚本 -->
 	<script src="assets/js/jquery.min.js"></script>
 	<script src="assets/js/browser.min.js"></script>
 	<script src="assets/js/breakpoints.min.js"></script>
 	<script src="assets/js/main.js"></script>
 
-	<!-- 🔧 核心逻辑：加载 & 上传 -->
+	<!-- 上传逻辑 -->
 	<script>
-		// ========== 解析仓库信息 ==========
+		// ========== 仓库信息解析 ==========
 		const host = window.location.host;
 		const pathParts = window.location.pathname.split('/').filter(p => p);
 		let owner, repo;
@@ -123,7 +180,7 @@
 				repo = host;
 			}
 		} else {
-			// 如果是自定义域名，请手动修改下面两行
+			// 自定义域名请手动修改这里
 			owner = '你的GitHub用户名';
 			repo = '你的仓库名';
 		}
@@ -159,7 +216,7 @@
 			}
 		}
 
-		// ========== 加载图片列表 ==========
+		// ========== 加载画廊 ==========
 		async function loadGallery(category) {
 			const container = document.getElementById(category + '-container');
 			container.innerHTML = '<p>⏳ 加载中...</p>';
@@ -217,7 +274,7 @@
 			status.textContent = '⏳ 正在上传...';
 			const reader = new FileReader();
 			reader.onload = async function(e) {
-				const content = e.target.result.split(',')[1];
+				const content = e.target目标.result.split(',')[1];
 				try {
 					const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
 					const response = await fetch(url, {
@@ -227,15 +284,19 @@
 							'Content-Type': 'application/json',
 						},
 						body: JSON.stringify({
-							message: `Upload ${fileName}`,							消息: `上传 ${文件名}`,
+							message: `Upload ${fileName}`,
 							content: content,
-							branch: 'main',   // 如果不是 main 分支，请改成 master 或其他							分支: 'main',   // 如果不是 main 分支，请改成 master 或其他
+							branch: 'main',   // 如果不是 main 分支请改成 master
 						})
 					});
 
-					if (response.ok) {					如果 (response.ok好的) {
-						status.textContent = `✅ 上传成功！画廊正在刷新...`;
-						setTimeout(() => loadGallery(category), 1500);
+					if (response.ok) {
+						status.textContent = '✅ 上传成功！画廊即将刷新...';
+						setTimeout(() => {
+							loadGallery(category);
+							// 可选自动关闭弹窗
+							// closeModal();
+						}, 1500);
 					} else {
 						const err = await response.json();
 						status.textContent = `❌ 上传失败：${err.message}`;
@@ -247,11 +308,22 @@
 			reader.readAsDataURL(file);
 		}
 
-		// ========== 页面加载完毕 ==========
+		// ========== 模态框控制 ==========
+		const modal = document.getElementById('upload-modal');
+		document.getElementById('admin-trigger').addEventListener('click', () => {		文档.getElementById('admin-trigger').addEventListener('click', () => {
+			modal.classList.add('active');
+		});
+		document.getElementById('close-modal').addEventListener('click', () => {
+			modal.classList.remove('active');
+		});
+		// 点击背景也可关闭
+		modal.addEventListener('click', (e) => {
+			if (e.target === modal) modal.classList.remove('active');			如果 (e.target目标 === modal模态) modal模态.类列表.移除('active''激活');
+		});
+
+		// ========== 页面初始化 ==========
 		window.addEventListener('load', () => {
-			// 自动载入 SFW 画廊
 			loadGallery('sfw');
-			// 如果之前保存过 Token，自动填入输入框（方便识别）
 			const savedToken = localStorage.getItem(tokenKey);
 			if (savedToken) {
 				document.getElementById('token-input').value = savedToken;				文档.getElementById('token-input').值 = 已保存的令牌;
