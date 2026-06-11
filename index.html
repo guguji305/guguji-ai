@@ -12,73 +12,170 @@
 	<link rel="stylesheet" href="assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 	<style>
-		/* 分类标签栏 */
+		/* ========== 新增：左右分栏布局 ========== */
+		body {
+			overflow: hidden; /* 防止双滚动条 */
+		}
+		#app-container {
+			display: flex;
+			height: 100vh;
+			width: 100vw;
+			overflow: hidden;
+		}
+
+		/* 左侧 Viewer */
+		#left-viewer {
+			width: 55%;
+			height: 100%;
+			background: #1a1a1a;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			position: relative;
+			flex-shrink: 0;
+		}
+		#viewer-img {
+			max-width: 90%;
+			max-height: 90%;
+			object-fit: contain;
+			transition: opacity 0.6s ease-in-out;
+			box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+			border-radius: 4px;
+		}
+		.viewer-overlay {
+			position: absolute;
+			bottom: 30px;
+			left: 0;
+			right: 0;
+			text-align: center;
+			pointer-events: none;
+		}
+		#resume-slideshow {
+			pointer-events: auto;
+			padding: 10px 24px;
+			background: rgba(255,255,255,0.15);
+			color: white;
+			border: 1px solid rgba(255,255,255,0.3);
+			border-radius: 20px;
+			cursor: pointer;
+			display: none;
+			backdrop-filter: blur(8px);
+			transition: 0.2s;
+			font-size: 0.95em;
+		}
+		#resume-slideshow:hover {
+			background: rgba(255,255,255,0.3);
+		}
+		#viewer-caption {
+			color: rgba(255,255,255,0.6);
+			margin-top: 12px;
+			font-size: 0.85em;
+			letter-spacing: 0.5px;
+		}
+
+		/* 右侧内容区 */
+		#right-content {
+			width: 45%;
+			height: 100%;
+			overflow-y: auto;
+			background: #f8f8f8;
+		}
+		
+		/* 覆盖原模板 #main 的居中限制，使其适应右侧滚动 */
+		#main {
+			width: 100% !important;
+			max-width: 100% !important;
+			margin: 0 !important;
+			padding: 2em !important;
+			box-sizing: border-box;
+			background: transparent !important;
+		}
+		#header, #footer {
+			text-align: center;
+		}
+
+		/* ========== 分类标签栏 ========== */
 		#category-tabs {
 			text-align: center;
-			margin: 2em 0 0.5em;
+			margin: 1em 0;
 			position: relative;
 			z-index: 10;
 		}
 		#category-tabs button {
-			margin: 5px;
-			padding: 8px 18px;
+			margin: 4px;
+			padding: 6px 16px;
 			border: none;
 			border-radius: 20px;
-			background: rgba(255,255,255,0.8);
-			color: #333;
+			background: rgba(0,0,0,0.05);
+			color: #555;
 			font-weight: bold;
 			cursor: pointer;
 			transition: 0.2s;
+			font-size: 0.9em;
 		}
 		#category-tabs button.active {
 			background: #222;
 			color: white;
 		}
 		#category-tabs button.nsfw-tab {
-			background: rgba(200,0,0,0.8);
-			color: white;
+			background: rgba(200,0,0,0.1);
+			color: #c00;
 		}
 		#category-tabs button.nsfw-tab.active {
-			background: red;
+			background: #c00;
+			color: white;
 		}
 
-		/* 动态画廊 */
+		/* ========== 动态画廊 (右侧网格) ========== */
 		.gallery {
-			display: flex;
-			flex-wrap: wrap;
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
 			gap: 12px;
 			justify-content: center;
 			margin: 1em 0;
-			padding: 1em;
+			padding: 0;
 		}
 		.img-wrapper {
 			position: relative;
 			display: inline-block;
 			cursor: pointer;
+			border-radius: 8px;
+			overflow: hidden;
+			transition: transform 0.2s, box-shadow 0.2s;
 		}
 		.img-wrapper img {
-			max-width: 300px;
-			height: auto;
-			border-radius: 10px;
-			box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-			transition: transform 0.2s;
+			width: 100%;
+			height: 140px;
+			object-fit: cover;
+			display: block;
+			transition: transform 0.3s;
+		}
+		.img-wrapper:hover {
+			transform: translateY(-3px);
+			box-shadow: 0 6px 15px rgba(0,0,0,0.15);
 		}
 		.img-wrapper:hover img {
-			transform: scale(1.03);
+			transform: scale(1.05);
 		}
+		/* 当前选中/播放的图片高亮 */
+		.img-wrapper.active {
+			outline: 3px solid #007bff;
+			outline-offset: -3px;
+		}
+		
 		/* 删除按钮（管理模式显示） */
 		.delete-img-btn {
 			position: absolute;
-			top: 8px;
-			right: 8px;
-			background: rgba(255,0,0,0.7);
+			top: 6px;
+			right: 6px;
+			background: rgba(255,0,0,0.8);
 			color: white;
 			border: none;
 			border-radius: 50%;
-			width: 28px;
-			height: 28px;
-			font-size: 16px;
-			line-height: 28px;
+			width: 24px;
+			height: 24px;
+			font-size: 14px;
+			line-height: 24px;
 			text-align: center;
 			cursor: pointer;
 			display: none;
@@ -88,27 +185,12 @@
 			display: block;
 		}
 
-		/* 原模板查看器补充样式（如果原CSS没完全包含） */
+		/* 隐藏原模板的全屏查看器，防止原 JS 报错 */
 		.viewer {
-			display: none;
-			position: fixed;
-			top: 0; left: 0; width: 100%; height: 100%;
-			background: rgba(10,10,10,0.95);
-			z-index: 10000;
-			cursor: pointer;
-		}
-		.viewer.visible {
-			display: block;
-		}
-		.viewer .image {
-			width: 100%;
-			height: 100%;
-			background-size: contain;
-			background-repeat: no-repeat;
-			background-position: center center;
+			display: none !important;
 		}
 
-		/* 上传模态框 */
+		/* ========== 上传模态框 ========== */
 		#upload-modal {
 			display: none;
 			position: fixed;
@@ -131,6 +213,8 @@
 			box-shadow: 0 20px 40px rgba(0,0,0,0.5);
 			text-align: center;
 			position: relative;
+			max-height: 90vh;
+			overflow-y: auto;
 		}
 		#upload-panel input, #upload-panel select, #upload-panel button {
 			margin: 8px 0;
@@ -162,52 +246,84 @@
 		.danger-btn { background: #c0392b !important; }
 		.danger-btn:hover { background: #e74c3c !important; }
 
-		/* 让 #thumbnails 适配动态内容 */
-		#thumbnails .gallery {
-			padding: 2em 0;
+		/* ========== 移动端响应式适配 ========== */
+		@media (max-width: 900px) {
+			body { overflow: auto; }
+			#app-container {
+				flex-direction: column;
+				height: auto;
+				overflow: visible;
+			}
+			#left-viewer {
+				width: 100%;
+				height: 50vh;
+				position: sticky;
+				top: 0;
+				z-index: 100;
+			}
+			#right-content {
+				width: 100%;
+				height: auto;
+				overflow: visible;
+			}
+			.gallery {
+				grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+			}
+			.img-wrapper img {
+				height: 100px;
+			}
 		}
 	</style>
 </head>
 <body class="is-preload-0 is-preload-1 is-preload-2">
 
-	<!-- Main -->
-	<div id="main">
-
-		<!-- Header -->
-		<header id="header">
-			<h1>咕咕鸡 <br />
-			AI 绘画 作品 仓库</h1>
-			<p>有好的作品会保存在这<br />
-			有时间就更新</p>
-			<ul class="actions">
-				<li><a href="#thumbnails" class="arrow scrolly">往下看作品</a></li>
-			</ul>
-		</header>
-
-		<!-- Thumbnail (动态画廊) -->
-		<section id="thumbnails">
-			<div id="category-tabs"></div>
-			<div class="gallery" id="gallery-container">
-				<p>⏳ 加载作品中...</p>
+	<!-- 新增：左右分栏容器 -->
+	<div id="app-container">
+		
+		<!-- 左侧 Viewer (自动幻灯片) -->
+		<div id="left-viewer">
+			<img id="viewer-img" src="" alt="Slideshow" />
+			<div class="viewer-overlay">
+				<button id="resume-slideshow">▶ 恢复幻灯片</button>
+				<div id="viewer-caption"></div>
 			</div>
-		</section>
+		</div>
 
-		<!-- Footer -->
-		<footer id="footer">
-			<h2>联系我</h2>
-			<p>对作品感兴趣？一起合作？发邮件或社交媒体找我。</p>
-			<div>
-				<a href="mailto:1599316531@qq.com" class="icon solid fa-envelope"> 邮箱</a>
-				<a href="https://twitter.com/youraccount" class="icon brands fa-twitter"> Twitter</a>
-				<a href="https://www.instagram.com/youraccount" class="icon brands fa-instagram"> Instagram</a>
+		<!-- 右侧内容区 (画廊与文本) -->
+		<div id="right-content">
+			<!-- Main -->
+			<div id="main">
+				<!-- Header -->
+				<header id="header">
+					<h1>咕咕鸡 <br />AI 绘画 作品集</h1>
+					<p>有好的作品会保存在这，有时间就更新</p>
+				</header>
+
+				<!-- Thumbnail (动态画廊) -->
+				<section id="thumbnails">
+					<div id="category-tabs"></div>
+					<div class="gallery" id="gallery-container">
+						<p>⏳ 加载作品中...</p>
+					</div>
+				</section>
+
+				<!-- Footer -->
+				<footer id="footer">
+					<h2>联系我</h2>
+					<p>对作品感兴趣？一起合作？发邮件或社交媒体找我。</p>
+					<div>
+						<a href="mailto:1599316531@qq.com" class="icon solid fa-envelope"> 邮箱</a>
+						<a href="https://twitter.com/youraccount" class="icon brands fa-twitter"> Twitter</a>
+						<a href="https://www.instagram.com/youraccount" class="icon brands fa-instagram"> Instagram</a>
+					</div>
+				</footer>
 			</div>
-		</footer>
-
+		</div>
 	</div>
 
-	<!-- 原模板的全屏查看器（若你删除了就补上） -->
+	<!-- 隐藏的原模板查看器（防止原 main.js 报错） -->
 	<div class="viewer">
-		<div class="image" style="background-position: center center;"></div>
+		<div class="image"></div>
 		<div class="nav-next"></div>
 		<div class="nav-previous"></div>
 		<div class="toggle"></div>
@@ -362,6 +478,88 @@
 			loadGallery(category);
 		}
 
+		// ========== 幻灯片与 Viewer 逻辑 ==========
+		let slideshowTimer = null;
+		let currentImageIndex = 0;
+		let imageUrls = [];
+		let imageNames = [];
+		let isFixedMode = false;
+
+		function preloadImage(url) {
+			const img = new Image();
+			img.src = url;
+		}
+
+		function startSlideshow() {
+			isFixedMode = false;
+			document.getElementById('resume-slideshow').style.display = 'none';
+			if (slideshowTimer) clearInterval(slideshowTimer);
+			
+			if (imageUrls.length === 0) {
+				document.getElementById('viewer-img').src = '';
+				document.getElementById('viewer-caption').textContent = '暂无图片';
+				return;
+			}
+
+			showImage(currentImageIndex);
+
+			slideshowTimer = setInterval(() => {
+				currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
+				showImage(currentImageIndex);
+			}, 4000); // 4秒切换一次
+		}
+
+		function showImage(index) {
+			const viewerImg = document.getElementById('viewer-img');
+			const caption = document.getElementById('viewer-caption');
+			
+			viewerImg.style.opacity = 0;
+			setTimeout(() => {
+				viewerImg.src = imageUrls[index];
+				caption.textContent = imageNames[index] || '';
+				viewerImg.style.opacity = 1;
+				
+				// 预加载下一张
+				const nextIndex = (index + 1) % imageUrls.length;
+				preloadImage(imageUrls[nextIndex]);
+				
+				// 高亮右侧缩略图
+				highlightThumbnail(index);
+			}, 300);
+		}
+
+		function highlightThumbnail(index) {
+			document.querySelectorAll('.img-wrapper').forEach((w, i) => {
+				if (i === index) w.classList.add('active');
+				else w.classList.remove('active');
+			});
+		}
+
+		function fixImage(url, name, index) {
+			isFixedMode = true;
+			if (slideshowTimer) clearInterval(slideshowTimer);
+			currentImageIndex = index;
+			
+			const viewerImg = document.getElementById('viewer-img');
+			const caption = document.getElementById('viewer-caption');
+			
+			viewerImg.style.opacity = 0;
+			setTimeout(() => {
+				viewerImg.src = url;
+				caption.textContent = name;
+				viewerImg.style.opacity = 1;
+				highlightThumbnail(index);
+			}, 150);
+
+			document.getElementById('resume-slideshow').style.display = 'inline-block';
+		}
+
+		// 恢复幻灯片按钮事件
+		document.getElementById('resume-slideshow').addEventListener('click', () => {
+			startSlideshow();
+		});
+
+		// ========== 画廊加载逻辑 ==========
 		async function loadGallery(category) {
 			const container = document.getElementById('gallery-container');
 			container.innerHTML = '<p>⏳ 加载中...</p>';
@@ -373,6 +571,7 @@
 				if (!res.ok) {
 					if (res.status === 404) {
 						container.innerHTML = '<p>这个作品集还是空的，快去上传吧！</p>';
+						imageUrls = []; imageNames = []; startSlideshow();
 						return;
 					}
 					throw new Error(`读取失败 (${res.status})`);
@@ -380,15 +579,23 @@
 				const files = await res.json();
 				if (!Array.isArray(files) || files.length === 0) {
 					container.innerHTML = '<p>暂无作品</p>';
+					imageUrls = []; imageNames = []; startSlideshow();
 					return;
 				}
 				const imageFiles = files.filter(f => f.type === 'file' && f.name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i));
 				container.innerHTML = '';
 				if (imageFiles.length === 0) {
 					container.innerHTML = '<p>暂无图片</p>';
+					imageUrls = []; imageNames = []; startSlideshow();
 					return;
 				}
-				imageFiles.forEach(file => {
+
+				// 收集 URL 用于幻灯片
+				imageUrls = imageFiles.map(f => f.download_url);
+				imageNames = imageFiles.map(f => f.name);
+				currentImageIndex = 0;
+
+				imageFiles.forEach((file, index) => {
 					const wrapper = document.createElement('div');
 					wrapper.className = 'img-wrapper';
 
@@ -406,10 +613,17 @@
 						deleteImage(file.path, file.sha, file.name);
 					};
 
+					// 点击固定图片
+					wrapper.onclick = () => fixImage(file.download_url, file.name, index);
+
 					wrapper.appendChild(img);
 					wrapper.appendChild(delBtn);
 					container.appendChild(wrapper);
 				});
+
+				// 启动幻灯片
+				startSlideshow();
+
 			} catch (error) {
 				container.innerHTML = `<p style="color:red;">⚠️ ${error.message}</p>`;
 			}
@@ -526,45 +740,6 @@
 			});
 		}
 
-		// ========== 原模板查看器点击逻辑 ==========
-		function openViewer(imageUrl) {
-			const viewer = document.querySelector('.viewer');
-			const imageDiv = viewer ? viewer.querySelector('.image') : null;
-			if (!imageDiv) return;
-			imageDiv.style.backgroundImage = `url('${imageUrl}')`;
-			viewer.classList.add('visible');
-			document.body.classList.add('is-viewer'); // 如果原模板使用了这个class
-		}
-
-		function closeViewer() {
-			const viewer = document.querySelector('.viewer');
-			if (!viewer) return;
-			viewer.classList.remove('visible');
-			document.body.classList.remove('is-viewer');
-		}
-
-		// 画廊点击委托
-		document.getElementById('gallery-container').addEventListener('click', function(e) {
-			const img = e.target.closest('.img-wrapper img');
-			if (!img) return;
-			e.preventDefault();
-			openViewer(img.src);
-		});
-
-		// 查看器背景点击关闭（包括 .image 自身）
-		document.querySelector('.viewer').addEventListener('click', function(e) {
-			if (e.target === this || e.target.classList.contains('image')) {
-				closeViewer();
-			}
-		});
-
-		// 键盘 ESC 关闭
-		window.addEventListener('keydown', function(e) {
-			if (e.key === 'Escape' && document.querySelector('.viewer.visible')) {
-				closeViewer();
-			}
-		});
-
 		// ========== 管理模态框快捷键 ==========
 		const modal = document.getElementById('upload-modal');
 		function openAdminPanel() {
@@ -591,9 +766,6 @@
 			if (savedToken) document.getElementById('token-input').value = savedToken;
 			await refreshCategoryList();
 			switchCategory(categoryList.includes('sfw') ? 'sfw' : categoryList[0]);
-
-			// 确保查看器默认隐藏（防止原模板残留状态）
-			closeViewer();
 		});
 	</script>
 </body>
