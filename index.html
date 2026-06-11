@@ -7,7 +7,53 @@
 	<link rel="stylesheet" href="assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 	<style>
-		/* 上传模态框 - 默认隐藏 */
+		/* 分类标签栏 */
+		#category-tabs {
+			text-align: center;
+			margin: 2em 0 0.5em;
+			position: relative;
+			z-index: 10;
+		}
+		#category-tabs button {
+			margin: 5px;
+			padding: 8px 18px;
+			border: none;
+			border-radius: 20px;
+			background: rgba(255,255,255,0.8);
+			color: #333;
+			font-weight: bold;
+			cursor: pointer;
+			transition: 0.2s;
+		}
+		#category-tabs button.active {
+			background: #222;
+			color: white;
+		}
+		#category-tabs button.nsfw-tab {
+			background: rgba(200,0,0,0.8);
+			color: white;
+		}
+		#category-tabs button.nsfw-tab.active {
+			background: red;
+		}
+
+		/* 统一画廊 */
+		.gallery {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 12px;
+			justify-content: center;
+			margin: 1em 0;
+			padding: 1em;
+		}
+		.gallery img {
+			max-width: 300px;
+			height: auto;
+			border-radius: 10px;
+			box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+		}
+
+		/* 上传模态框样式 */
 		#upload-modal {
 			display: none;
 			position: fixed;
@@ -25,14 +71,14 @@
 			color: #333;
 			padding: 2em;
 			border-radius: 12px;
-			max-width: 420px;
+			max-width: 480px;
 			width: 90%;
-			box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+			box-shadow: 0 20px 40px rgba(0,0,0,0.5);
 			text-align: center;
 			position: relative;
 		}
 		#upload-panel input, #upload-panel select, #upload-panel button {
-			margin: 6px 0;
+			margin: 8px 0;
 			padding: 10px;
 			border-radius: 6px;
 			border: 1px solid #ccc;
@@ -50,25 +96,16 @@
 		#close-modal {
 			position: absolute;
 			top: 10px; right: 14px;
-			background: none;
+			background: none !important;
 			border: none;
-			font-size: 24px;
+			font-size: 28px;
 			color: #999;
 			cursor: pointer;
+			width: auto;
 		}
-
-		.gallery {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 10px;
-			justify-content: center;
-			margin: 1em 0;
-		}
-		.gallery img {
-			max-width: 300px;
-			height: auto;
-			border-radius: 8px;
-			box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+		.hint {
+			font-size: 0.9em;
+			opacity: 0.7;
 		}
 	</style>
 </head>
@@ -80,26 +117,18 @@
 		<header id="header">
 			<h1>咕咕鸡<br />AI 绘画作品仓库</h1>
 			<p>有好的作品会保存在这<br />有时间就更新</p>
-			<ul class="actions">
-				<li><a href="#sfw-gallery" class="arrow scrolly">往下看作品</a></li>
-			</ul>
 		</header>
 
-		<!-- SFW 画廊 -->
-		<section id="sfw-gallery" style="padding: 2em; text-align: center;">
-			<h2>🖼️ 正常作品</h2>
-			<div class="gallery" id="sfw-container"></div>
-		</section>
-
-		<!-- NSFW 按钮 + 画廊 -->
-		<div style="text-align: center; margin: 2em;">
-			<button id="show-nsfw" onclick="toggleNsfw()" style="padding: 10px 20px; font-size: 16px;">
-				🔞 查看 NSFW 作品（需成年）
-			</button>
+		<!-- 动态分类标签栏 -->
+		<div id="category-tabs">
+			<!-- 通过 JS 动态生成 -->
 		</div>
-		<section id="nsfw-gallery" style="display: none; padding: 2em; text-align: center;">
-			<h2>🔞 NSFW 作品</h2>
-			<div class="gallery" id="nsfw-container"></div>
+
+		<!-- 统一画廊 -->
+		<section style="text-align: center; padding-top: 0.5em;">
+			<div class="gallery" id="gallery-container">
+				<p>⏳ 加载作品中...</p>
+			</div>
 		</section>
 
 		<!-- Footer -->
@@ -119,43 +148,56 @@
 	<div id="upload-modal">
 		<div id="upload-panel">
 			<button id="close-modal">&times;</button>
-			<h3>📤 上传新作品</h3>
-			<p style="font-size:0.9em;">
-				首次使用需粘贴 GitHub Token（保存在本地）：
-			</p>
-			<input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxx" />
-			<button onclick="saveToken()">保存 Token</button>
-			<input type="file" id="file-input" accept="image/*" />
-			<select id="category-select">
-				<option value="sfw">🖼️ 正常作品 (SFW)</option>
-				<option value="nsfw">🔞 NSFW 作品</option>
-			</select>
-			<button onclick="uploadImage()">上传图片</button>
+			<h3>📤 管理作品集</h3>
+
+			<!-- Token 设置 -->
+			<div style="text-align: left;">
+				<label>🔑 GitHub Token <span class="hint">（自动保存）</span></label>
+				<input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxx" />
+				<button onclick="saveToken()" style="width:auto; padding:6px 15px;">保存</button>
+			</div>
+
+			<hr>
+
+			<!-- 选择已有分类 或 创建新分类 -->
+			<div style="text-align: left;">
+				<label>📁 作品集分类</label>
+				<select id="category-select"></select>
+				<div style="display: flex; gap: 5px; margin-top: 5px;">
+					<input type="text" id="new-category-input" placeholder="新分类名（如：风景、人物）" />
+					<button onclick="addCategory()" style="width:auto; padding:6px 12px;">创建</button>
+				</div>
+			</div>
+
+			<hr>
+
+			<!-- 批量上传 -->
+			<div style="text-align: left;">
+				<label>🖼️ 选择图片（可多选）</label>
+				<input type="file" id="file-input" accept="image/*" multiple />
+			</div>
+
+			<button onclick="uploadImages()" style="margin-top:15px;">⬆️ 上传所有选中图片</button>
 			<p id="upload-status" style="margin-top:10px; font-size:0.9em; color:#333;"></p>
 		</div>
 	</div>
 
-	<!-- 必须脚本 -->
+	<!-- 基础脚本 -->
 	<script src="assets/js/jquery.min.js"></script>
 	<script src="assets/js/browser.min.js"></script>
 	<script src="assets/js/breakpoints.min.js"></script>
 	<script src="assets/js/main.js"></script>
 
-	<!-- 上传逻辑 -->
 	<script>
-		// ========== 仓库信息解析 ==========
+		// ========== 仓库信息 ==========
 		const host = window.location.host;
 		const pathParts = window.location.pathname.split('/').filter(p => p);
 		let owner, repo;
 		if (host.endsWith('.github.io')) {
 			owner = host.split('.')[0];
-			if (pathParts.length > 0) {
-				repo = pathParts[0];
-			} else {
-				repo = host;
-			}
+			repo = pathParts.length > 0 ? pathParts[0] : host;
 		} else {
-			// 自定义域名请手动修改这里
+			// 自定义域名请手动修改！
 			owner = '你的GitHub用户名';
 			repo = '你的仓库名';
 		}
@@ -170,30 +212,124 @@
 			if (token) {
 				localStorage.setItem(tokenKey, token);
 				alert('✅ Token 已保存！');
-				loadGallery('sfw');
-				loadGallery('nsfw');
-			}
-		}
-
-		// ========== NSFW 折叠 ==========
-		function toggleNsfw() {
-			const section = document.getElementById('nsfw-gallery');
-			const btn = document.getElementById('show-nsfw');
-			if (section.style.display === 'none') {
-				section.style.display = 'block';
-				btn.textContent = '🔞 隐藏 NSFW 作品';
-				if (document.getElementById('nsfw-container').children.length === 0) {
-					loadGallery('nsfw');
-				}
+				refreshCategoryList(); // 刷新分类列表
 			} else {
-				section.style.display = 'none';
-				btn.textContent = '🔞 查看 NSFW 作品（需成年）';
+				alert('请输入 Token');
 			}
 		}
 
-		// ========== 加载画廊 ==========
+		// ========== 分类管理 ==========
+		let currentCategory = 'sfw';          // 当前选中的分类
+		let categoryList = ['sfw', 'nsfw'];  // 初始默认，后动态获取
+
+		// 从 GitHub 获取 images 下的所有子目录（分类）
+		async function fetchCategories() {
+			const token = getToken();
+			const headers = token ? { 'Authorization': `token ${token}` } : {};
+			const url = `https://api.github.com/repos/${owner}/${repo}/contents/images`;
+			try {
+				const res = await fetch(url, { headers });
+				if (!res.ok) {
+					console.warn('无法获取分类列表，使用本地缓存');
+					return JSON.parse(localStorage.getItem('custom_categories') || '["sfw","nsfw"]');
+				}
+				const items = await res.json();
+				const dirs = items.filter(i => i.type === 'dir').map(i => i.name);
+				// 确保默认分类存在
+				if (!dirs.includes('sfw')) dirs.push('sfw');
+				if (!dirs.includes('nsfw')) dirs.push('nsfw');
+				return [...new Set(dirs)]; // 去重
+			} catch (e) {
+				console.error('获取分类失败', e);
+				return JSON.parse(localStorage.getItem('custom_categories') || '["sfw","nsfw"]');
+			}
+		}
+
+		// 更新分类下拉框 + 标签栏 + 缓存
+		async function refreshCategoryList() {
+			const categories = await fetchCategories();
+			categoryList = categories;
+			localStorage.setItem('custom_categories', JSON.stringify(categories));
+
+			// 更新上传面板的下拉菜单
+			const select = document.getElementById('category-select');
+			select.innerHTML = '';
+			categories.forEach(cat => {
+				const opt = document.createElement('option');
+				opt.value = cat;
+				opt.textContent = cat === 'nsfw' ? '🔞 NSFW' : cat;
+				select.appendChild(opt);
+			});
+
+			// 如果之前没有选中，默认选第一个非 nsfw 的分类作为上传默认值
+			if (!select.value || select.value === 'nsfw') {
+				const defaultCat = categories.find(c => c !== 'nsfw') || categories[0];
+				select.value = defaultCat;
+			}
+
+			// 更新标签栏
+			renderCategoryTabs(categories);
+
+			// 如果当前选中的分类已经不在列表中，切换到第一个
+			if (!categories.includes(currentCategory)) {
+				currentCategory = categories[0];
+			}
+			// 重新加载当前分类的画廊
+			loadGallery(currentCategory);
+		}
+
+		// 创建新分类（写入自定义缓存，实际上传时会自动创建目录）
+		function addCategory() {
+			const input = document.getElementById('new-category-input');
+			const name = input.value.trim();
+			if (!name) return alert('请输入分类名称');
+			if (categoryList.includes(name)) {
+				alert('此分类已存在');
+				return;
+			}
+			categoryList.push(name);
+			localStorage.setItem('custom_categories', JSON.stringify(categoryList));
+			// 刷新下拉与标签
+			const select = document.getElementById('category-select');
+			const opt = document.createElement('option');
+			opt.value = name;
+			opt.textContent = name;
+			select.appendChild(opt);
+			select.value = name;
+			renderCategoryTabs(categoryList);
+			input.value = '';
+		}
+
+		// 渲染分类标签按钮
+		function renderCategoryTabs(categories) {
+			const container = document.getElementById('category-tabs');
+			container.innerHTML = '';
+			categories.forEach(cat => {
+				const btn = document.createElement('button');
+				btn.textContent = cat === 'nsfw' ? '🔞 NSFW' : cat;
+				btn.className = (cat === currentCategory) ? 'active' : '';
+				if (cat === 'nsfw') btn.classList.add('nsfw-tab');
+				btn.onclick = () => switchCategory(cat);
+				container.appendChild(btn);
+			});
+		}
+
+		// 切换分类
+		function switchCategory(category) {
+			currentCategory = category;
+			// 更新标签 active 样式
+			document.querySelectorAll('#category-tabs button').forEach(btn => {
+				btn.classList.remove('active');
+				if (btn.textContent === (category === 'nsfw' ? '🔞 NSFW' : category)) {
+					btn.classList.add('active');
+				}
+			});
+			loadGallery(category);
+		}
+
+		// ========== 画廊加载 ==========
 		async function loadGallery(category) {
-			const container = document.getElementById(category + '-container');
+			const container = document.getElementById('gallery-container');
 			container.innerHTML = '<p>⏳ 加载中...</p>';
 
 			const token = getToken();
@@ -201,32 +337,40 @@
 
 			try {
 				const url = `https://api.github.com/repos/${owner}/${repo}/contents/images/${category}`;
-				const response = await fetch(url, { headers });
-				if (!response.ok) {
-					throw new Error('读取失败（可能需要 GitHub Token）');
+				const res = await fetch(url, { headers });
+				if (!res.ok) {
+					// 如果是 404 说明目录为空或不存在
+					if (res.status === 404) {
+						container.innerHTML = '<p>这个作品集还是空的，快去上传吧！</p>';
+						return;
+					}
+					throw new Error(`读取失败 (${res.status})`);
 				}
-				const files = await response.json();
-				container.innerHTML = '';
+				const files = await res.json();
 				if (!Array.isArray(files) || files.length === 0) {
-					container.innerHTML = '<p>暂无作品，快去上传吧！</p>';
+					container.innerHTML = '<p>暂无作品</p>';
 					return;
 				}
-				files.forEach(file => {
-					if (file.type === 'file' && file.name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
-						const img = document.createElement('img');
-						img.src = file.download_url;
-						img.alt = file.name;
-						img.loading = 'lazy';
-						container.appendChild(img);
-					}
+				const imageFiles = files.filter(f => f.type === 'file' && f.name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i));
+				container.innerHTML = '';
+				if (imageFiles.length === 0) {
+					container.innerHTML = '<p>暂无图片</p>';
+					return;
+				}
+				imageFiles.forEach(file => {
+					const img = document.createElement('img');
+					img.src = file.download_url;
+					img.alt = file.name;
+					img.loading = 'lazy';
+					container.appendChild(img);
 				});
 			} catch (error) {
-				container.innerHTML = `<p style="color:orange;">⚠️ ${error.message}</p>`;
+				container.innerHTML = `<p style="color:red;">⚠️ ${error.message}</p>`;
 			}
 		}
 
-		// ========== 上传图片 ==========
-		async function uploadImage() {
+		// ========== 批量上传 ==========
+		async function uploadImages() {
 			const token = getToken();
 			if (!token) {
 				alert('请先输入并保存 GitHub Token！');
@@ -238,52 +382,67 @@
 			const status = document.getElementById('upload-status');
 
 			if (!fileInput.files || fileInput.files.length === 0) {
-				alert('请选择一张图片');
+				alert('请至少选择一张图片');
 				return;
 			}
 
-			const file = fileInput.files[0];
-			const fileName = file.name.replace(/\s+/g, '_');
-			const path = `images/${category}/${fileName}`;
+			status.textContent = `⏳ 正在上传 ${fileInput.files.length} 个文件...`;
+			const results = [];
 
-			status.textContent = '⏳ 正在上传...';
-			const reader = new FileReader();
-			reader.onload = async function(e) {
-				const content = e.target.result.split(',')[1];
+			for (let i = 0; i < fileInput.files.length; i++) {
+				const file = fileInput.files[i];
+				const fileName = file.name.replace(/\s+/g, '_');
+				const path = `images/${category}/${fileName}`;
+				status.textContent = `⏳ 上传中 (${i+1}/${fileInput.files.length}): ${fileName}`;
+
 				try {
+					const content = await readFileAsBase64(file);
 					const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-					const response = await fetch(url, {
+					const res = await fetch(url, {
 						method: 'PUT',
 						headers: {
 							'Authorization': `token ${token}`,
 							'Content-Type': 'application/json',
 						},
 						body: JSON.stringify({
-							message: `Upload ${fileName}`,
+							message: `Upload ${fileName} to ${category}`,
 							content: content,
-							branch: 'main',   // 如果不是 main 分支请改成 master
+							branch: 'main'   // 如果不是 main 请改成 master
 						})
 					});
-
-					if (response.ok) {
-						status.textContent = '✅ 上传成功！画廊即将刷新...';
-						setTimeout(() => {
-							loadGallery(category);
-							// 可选自动关闭弹窗
-							// closeModal();
-						}, 1500);
+					if (res.ok) {
+						results.push(`✅ ${fileName}`);
 					} else {
-						const err = await response.json();
-						status.textContent = `❌ 上传失败：${err.message}`;
+						const err = await res.json();
+						results.push(`❌ ${fileName}: ${err.message}`);
 					}
 				} catch (error) {
-					status.textContent = `❌ 网络错误：${error.message}`;
+					results.push(`❌ ${fileName}: ${error.message}`);
 				}
-			};
-			reader.readAsDataURL(file);
+			}
+
+			status.innerHTML = results.join('<br>');
+			// 上传完成后刷新分类列表和画廊
+			await refreshCategoryList();
+			loadGallery(category);
+			// 清除文件选择
+			fileInput.value = '';
 		}
 
-		// ========== 模态框控制（快捷键触发） ==========
+		// 辅助：读取文件为 base64（去除 data:xxx;base64, 前缀）
+		function readFileAsBase64(file) {
+			return new Promise((resolve, reject) => {
+				const reader = new FileReader();
+				reader.onload = () => {
+					const data = reader.result.split(',')[1];
+					resolve(data);
+				};
+				reader.onerror = reject;
+				reader.readAsDataURL(file);
+			});
+		}
+
+		// ========== 模态框控制（快捷键 Ctrl+Shift+U） ==========
 		const modal = document.getElementById('upload-modal');
 		document.getElementById('close-modal').addEventListener('click', () => {
 			modal.classList.remove('active');
@@ -292,23 +451,31 @@
 			if (e.target === modal) modal.classList.remove('active');
 		});
 
-		// 键盘快捷键 Ctrl+Shift+U 打开上传弹窗
 		window.addEventListener('keydown', (e) => {
+			// Ctrl+Shift+U 打开管理面板
 			if (e.ctrlKey && e.shiftKey && e.key === 'U') {
-				e.preventDefault(); // 防止浏览器默认行为（如打开源码面板）
+				e.preventDefault();
 				modal.classList.add('active');
+				// 打开时刷新一下分类下拉
+				refreshCategoryList();
 			}
 		});
 
 		// ========== 页面初始化 ==========
-		window.addEventListener('load', () => {
-			loadGallery('sfw');
+		window.addEventListener('load', async () => {
+			// 预填 token
 			const savedToken = localStorage.getItem(tokenKey);
 			if (savedToken) {
 				document.getElementById('token-input').value = savedToken;
 			}
-			// 控制台友好提示（可选）
-			console.log('管理后台：按 Ctrl+Shift+U 打开上传面板');
+			// 初始化分类列表并加载默认画廊
+			await refreshCategoryList();
+			// 默认显示 sfw（如果存在）
+			if (categoryList.includes('sfw')) {
+				switchCategory('sfw');
+			} else {
+				switchCategory(categoryList[0]);
+			}
 		});
 	</script>
 </body>
