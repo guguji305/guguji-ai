@@ -219,7 +219,46 @@
 	<script src="assets/js/browser.min.js"></script>
 	<script src="assets/js/breakpoints.min.js"></script>
 	<script src="assets/js/main.js"></script>
-
+	// ========== 让动态图片点击时使用原模板的全屏查看器 ==========
+	function openViewer(imageUrl) {
+	    const viewer = document.querySelector('.viewer');
+	    const imageDiv = viewer ? viewer.querySelector('.image') : null;
+	    if (!imageDiv) return;
+	
+	    // 设置背景图
+	    imageDiv.style.backgroundImage = `url('${imageUrl}')`;
+	
+	    // 显示查看器（原模板通常通过添加 class 来控制）
+	    viewer.classList.add('visible');
+	    document.body.classList.add('is-viewer'); // 有些模板用这个类
+	}
+	
+	// 关闭查看器
+	function closeViewer() {
+	    const viewer = document.querySelector('.viewer');
+	    if (!viewer) return;
+	    viewer.classList.remove('visible');
+	    document.body.classList.remove('is-viewer');
+	}
+	
+	// 为动态生成的图片绑定点击事件（委托在画廊容器上）
+	document.getElementById('gallery-container').addEventListener('click', function(e) {
+	    const img = e.target.closest('.img-wrapper img');
+	    if (!img) return;
+	    e.preventDefault();
+	    openViewer(img.src);
+	});
+	
+	// 点击查看器背景自身关闭（或者监听关闭按钮，这里简单处理）
+	document.addEventListener('click', function(e) {
+	    const viewer = document.querySelector('.viewer');
+	    if (!viewer || !viewer.classList.contains('visible')) return;
+	
+	    // 如果是点击了背景 .viewer 本身，而不是里面的链接等，则关闭
+	    if (e.target === viewer || e.target.classList.contains('image')) {
+	        closeViewer();
+	    }
+	});
 	<script>
 		// ========== 仓库信息 ==========
 		const host = window.location.host;
