@@ -7,7 +7,7 @@
 	<link rel="stylesheet" href="assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 	<style>
-		/* 分类标签栏 */
+		/* ===== 分类标签栏 ===== */
 		#category-tabs {
 			text-align: center;
 			margin: 2em 0 0.5em;
@@ -37,7 +37,7 @@
 			background: red;
 		}
 
-		/* 统一画廊 */
+		/* ===== 画廊图片容器 ===== */
 		.gallery {
 			display: flex;
 			flex-wrap: wrap;
@@ -46,14 +46,40 @@
 			margin: 1em 0;
 			padding: 1em;
 		}
-		.gallery img {
+		.img-wrapper {
+			position: relative;
+			display: inline-block;
+		}
+		.img-wrapper img {
 			max-width: 300px;
 			height: auto;
 			border-radius: 10px;
 			box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 		}
+		/* 删除按钮（默认隐藏，管理模式显示） */
+		.delete-img-btn {
+			position: absolute;
+			top: 8px;
+			right: 8px;
+			background: rgba(255,0,0,0.7);
+			color: white;
+			border: none;
+			border-radius: 50%;
+			width: 28px;
+			height: 28px;
+			font-size: 16px;
+			line-height: 28px;
+			text-align: center;
+			cursor: pointer;
+			display: none;
+			z-index: 5;
+		}
+		/* 管理模式时显示删除按钮 */
+		body.admin-mode .delete-img-btn {
+			display: block;
+		}
 
-		/* 上传模态框样式 */
+		/* ===== 上传模态框 ===== */
 		#upload-modal {
 			display: none;
 			position: fixed;
@@ -107,22 +133,25 @@
 			font-size: 0.9em;
 			opacity: 0.7;
 		}
+		.danger-btn {
+			background: #c0392b !important;
+		}
+		.danger-btn:hover {
+			background: #e74c3c !important;
+		}
 	</style>
 </head>
 <body>
 
 	<div id="main">
 
-		<!-- Header -->
 		<header id="header">
 			<h1>咕咕鸡<br />AI 绘画作品仓库</h1>
 			<p>有好的作品会保存在这<br />有时间就更新</p>
 		</header>
 
 		<!-- 动态分类标签栏 -->
-		<div id="category-tabs">
-			<!-- 通过 JS 动态生成 -->
-		</div>
+		<div id="category-tabs"></div>
 
 		<!-- 统一画廊 -->
 		<section style="text-align: center; padding-top: 0.5em;">
@@ -131,7 +160,6 @@
 			</div>
 		</section>
 
-		<!-- Footer -->
 		<footer id="footer">
 			<h2>联系我</h2>
 			<p>对作品感兴趣？一起合作？发邮件或社交媒体找我。</p>
@@ -144,13 +172,13 @@
 
 	</div>
 
-	<!-- 隐藏的上传模态框 -->
+	<!-- 隐藏的上传 + 管理模态框 -->
 	<div id="upload-modal">
 		<div id="upload-panel">
 			<button id="close-modal">&times;</button>
-			<h3>📤 管理作品集</h3>
+			<h3>🔧 作品集管理</h3>
 
-			<!-- Token 设置 -->
+			<!-- Token -->
 			<div style="text-align: left;">
 				<label>🔑 GitHub Token <span class="hint">（自动保存）</span></label>
 				<input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxx" />
@@ -159,37 +187,42 @@
 
 			<hr>
 
-			<!-- 选择已有分类 或 创建新分类 -->
+			<!-- 分类创建 -->
 			<div style="text-align: left;">
-				<label>📁 作品集分类</label>
+				<label>📁 当前分类</label>
 				<select id="category-select"></select>
 				<div style="display: flex; gap: 5px; margin-top: 5px;">
-					<input type="text" id="new-category-input" placeholder="新分类名（如：风景、人物）" />
+					<input type="text" id="new-category-input" placeholder="新分类名" />
 					<button onclick="addCategory()" style="width:auto; padding:6px 12px;">创建</button>
 				</div>
 			</div>
 
 			<hr>
 
-			<!-- 批量上传 -->
+			<!-- 上传 -->
 			<div style="text-align: left;">
 				<label>🖼️ 选择图片（可多选）</label>
 				<input type="file" id="file-input" accept="image/*" multiple />
 			</div>
+			<button onclick="uploadImages()">⬆️ 上传所有选中图片</button>
 
-			<button onclick="uploadImages()" style="margin-top:15px;">⬆️ 上传所有选中图片</button>
+			<hr>
+
+			<!-- 危险操作：删除分类 -->
+			<button class="danger-btn" onclick="deleteCategory()">🗑️ 删除当前分类（所有图片）</button>
+			<p style="margin-top:10px; font-size:0.8em; color:#666;">⚠️ 删除后不可恢复，请谨慎操作</p>
+
 			<p id="upload-status" style="margin-top:10px; font-size:0.9em; color:#333;"></p>
 		</div>
 	</div>
 
-	<!-- 基础脚本 -->
 	<script src="assets/js/jquery.min.js"></script>
 	<script src="assets/js/browser.min.js"></script>
 	<script src="assets/js/breakpoints.min.js"></script>
 	<script src="assets/js/main.js"></script>
 
 	<script>
-		// ========== 仓库信息 ==========
+		// ========== 仓库信息（自适应） ==========
 		const host = window.location.host;
 		const pathParts = window.location.pathname.split('/').filter(p => p);
 		let owner, repo;
@@ -197,61 +230,54 @@
 			owner = host.split('.')[0];
 			repo = pathParts.length > 0 ? pathParts[0] : host;
 		} else {
-			// 自定义域名请手动修改！
+			// 自定义域名请修改这里！
 			owner = '你的GitHub用户名';
 			repo = '你的仓库名';
 		}
+		const branch = 'main';   // 如果不是 main 分支请改成 master
 
-		// ========== Token 管理 ==========
+		// ========== Token ==========
 		const tokenKey = 'github_token_for_uploader';
-		function getToken() {
-			return localStorage.getItem(tokenKey);
-		}
+		function getToken() { return localStorage.getItem(tokenKey); }
 		function saveToken() {
 			const token = document.getElementById('token-input').value.trim();
 			if (token) {
 				localStorage.setItem(tokenKey, token);
 				alert('✅ Token 已保存！');
-				refreshCategoryList(); // 刷新分类列表
+				refreshCategoryList();
 			} else {
 				alert('请输入 Token');
 			}
 		}
 
 		// ========== 分类管理 ==========
-		let currentCategory = 'sfw';          // 当前选中的分类
-		let categoryList = ['sfw', 'nsfw'];  // 初始默认，后动态获取
+		let currentCategory = 'sfw';
+		let categoryList = ['sfw', 'nsfw'];
 
-		// 从 GitHub 获取 images 下的所有子目录（分类）
 		async function fetchCategories() {
 			const token = getToken();
 			const headers = token ? { 'Authorization': `token ${token}` } : {};
 			const url = `https://api.github.com/repos/${owner}/${repo}/contents/images`;
-			try {
+			try {			尝试 {
 				const res = await fetch(url, { headers });
 				if (!res.ok) {
-					console.warn('无法获取分类列表，使用本地缓存');
 					return JSON.parse(localStorage.getItem('custom_categories') || '["sfw","nsfw"]');
 				}
 				const items = await res.json();
 				const dirs = items.filter(i => i.type === 'dir').map(i => i.name);
-				// 确保默认分类存在
 				if (!dirs.includes('sfw')) dirs.push('sfw');
 				if (!dirs.includes('nsfw')) dirs.push('nsfw');
-				return [...new Set(dirs)]; // 去重
+				return [...new Set(dirs)];
 			} catch (e) {
-				console.error('获取分类失败', e);
 				return JSON.parse(localStorage.getItem('custom_categories') || '["sfw","nsfw"]');
 			}
 		}
 
-		// 更新分类下拉框 + 标签栏 + 缓存
 		async function refreshCategoryList() {
 			const categories = await fetchCategories();
 			categoryList = categories;
 			localStorage.setItem('custom_categories', JSON.stringify(categories));
 
-			// 更新上传面板的下拉菜单
 			const select = document.getElementById('category-select');
 			select.innerHTML = '';
 			categories.forEach(cat => {
@@ -261,35 +287,24 @@
 				select.appendChild(opt);
 			});
 
-			// 如果之前没有选中，默认选第一个非 nsfw 的分类作为上传默认值
-			if (!select.value || select.value === 'nsfw') {
-				const defaultCat = categories.find(c => c !== 'nsfw') || categories[0];
-				select.value = defaultCat;
-			}
-
-			// 更新标签栏
 			renderCategoryTabs(categories);
 
-			// 如果当前选中的分类已经不在列表中，切换到第一个
-			if (!categories.includes(currentCategory)) {
+			if (!categories.includes(currentCategory)) {			如果 (!categories.includes(currentCategory)) {
 				currentCategory = categories[0];
 			}
-			// 重新加载当前分类的画廊
 			loadGallery(currentCategory);
 		}
 
-		// 创建新分类（写入自定义缓存，实际上传时会自动创建目录）
 		function addCategory() {
 			const input = document.getElementById('new-category-input');
 			const name = input.value.trim();
 			if (!name) return alert('请输入分类名称');
-			if (categoryList.includes(name)) {
+			if (categoryList.includes(name)) {			如果 (categoryList.includes(name)) {
 				alert('此分类已存在');
-				return;
+				return;				返回;
 			}
 			categoryList.push(name);
 			localStorage.setItem('custom_categories', JSON.stringify(categoryList));
-			// 刷新下拉与标签
 			const select = document.getElementById('category-select');
 			const opt = document.createElement('option');
 			opt.value = name;
@@ -300,7 +315,6 @@
 			input.value = '';
 		}
 
-		// 渲染分类标签按钮
 		function renderCategoryTabs(categories) {
 			const container = document.getElementById('category-tabs');
 			container.innerHTML = '';
@@ -314,10 +328,8 @@
 			});
 		}
 
-		// 切换分类
 		function switchCategory(category) {
 			currentCategory = category;
-			// 更新标签 active 样式
 			document.querySelectorAll('#category-tabs button').forEach(btn => {
 				btn.classList.remove('active');
 				if (btn.textContent === (category === 'nsfw' ? '🔞 NSFW' : category)) {
@@ -327,27 +339,26 @@
 			loadGallery(category);
 		}
 
-		// ========== 画廊加载 ==========
+		// ========== 画廊加载（附带 sha 与删除按钮） ==========
 		async function loadGallery(category) {
 			const container = document.getElementById('gallery-container');
 			container.innerHTML = '<p>⏳ 加载中...</p>';
 
-			const token = getToken();
+			const token = getToken();			常量 token = 获取Token();
 			const headers = token ? { 'Authorization': `token ${token}` } : {};
 
-			try {
+			try {			尝试 {
 				const url = `https://api.github.com/repos/${owner}/${repo}/contents/images/${category}`;
 				const res = await fetch(url, { headers });
 				if (!res.ok) {
-					// 如果是 404 说明目录为空或不存在
 					if (res.status === 404) {
 						container.innerHTML = '<p>这个作品集还是空的，快去上传吧！</p>';
-						return;
+						return;						返回;
 					}
-					throw new Error(`读取失败 (${res.status})`);
+					throw new Error(`读取失败 (${res.status})`);					抛出 新 错误(`读取失败 (${res.状态})`);
 				}
 				const files = await res.json();
-				if (!Array.isArray(files) || files.length === 0) {
+				if (!Array.isArray(files) || files.length === 0) {				如果 (!Array.isArray(files) || files.长度 === 0) {
 					container.innerHTML = '<p>暂无作品</p>';
 					return;
 				}
@@ -358,14 +369,122 @@
 					return;
 				}
 				imageFiles.forEach(file => {
+					const wrapper = document.createElement('div');
+					wrapper.className = 'img-wrapper';
+
 					const img = document.createElement('img');
 					img.src = file.download_url;
 					img.alt = file.name;
 					img.loading = 'lazy';
-					container.appendChild(img);
+
+					const delBtn = document.createElement('button');
+					delBtn.className = 'delete-img-btn';
+					delBtn.innerHTML = '✕';
+					delBtn.title = '删除此图片';
+					delBtn.onclick = (e) => {
+						e.stopPropagation();
+						deleteImage(file.path, file.sha, file.name);
+					};
+
+					wrapper.appendChild(img);
+					wrapper.appendChild(delBtn);
+					container.appendChild(wrapper);
 				});
 			} catch (error) {
 				container.innerHTML = `<p style="color:red;">⚠️ ${error.message}</p>`;
+			}
+		}
+
+		// ========== 删除单张图片 ==========
+		async function deleteImage(path, sha, fileName) {
+			if (!confirm(`确定要删除 "${fileName}" 吗？此操作不可恢复！`)) return;
+			const token = getToken();
+			if (!token) {
+				alert('请先保存 GitHub Token');
+				return;
+			}
+			try {
+				const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+				const res = await fetch(url, {
+					method: 'DELETE',
+					headers: {
+						'Authorization': `token ${token}`,
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						message: `Delete ${fileName}`,
+						sha: sha,
+						branch: branch
+					})
+				});
+				if (res.ok) {
+					alert(`已删除 ${fileName}`);
+					loadGallery(currentCategory);
+				} else {
+					const err = await res.json();
+					alert(`删除失败：${err.message}`);
+				}
+			} catch (error) {
+				alert(`网络错误：${error.message}`);
+			}
+		}
+
+		// ========== 删除整个分类（所有图片） ==========
+		async function deleteCategory() {
+			const category = document.getElementById('category-select').value;
+			if (!confirm(`⚠️ 将删除“${category}”作品集及其所有图片！\n此操作不可恢复，确定继续吗？`)) return;
+
+			const token = getToken();
+			if (!token) {
+				alert('请先保存 GitHub Token');
+				return;
+			}
+
+			const status = document.getElementById('upload-status');
+			status.textContent = `🗑️ 正在删除“${category}”中的所有文件...`;
+
+			try {
+				// 获取该目录下所有文件
+				const listUrl = `https://api.github.com/repos/${owner}/${repo}/contents/images/${category}`;
+				const listRes = await fetch(listUrl, {
+					headers: { 'Authorization': `token ${token}` }
+				});
+				if (!listRes.ok) {
+					throw new Error(`无法获取文件列表 (${listRes.status})`);
+				}
+				const files = await listRes.json();
+				if (!Array.isArray(files) || files.length === 0) {
+					// 目录为空，直接删除目录引用（实际上 GitHub 空目录会自动消失）
+					status.textContent = '✅ 分类已空，可直接移除。';
+					await refreshCategoryList();
+					return;
+				}
+
+				// 逐个删除文件
+				let deleted = 0;
+				for (const file of files) {
+					const delUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${file.path}`;
+					const delRes = await fetch(delUrl, {
+						method: 'DELETE',
+						headers: {
+							'Authorization': `token ${token}`,
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({
+							message: `Delete ${file.name} (category removal)`,
+							sha: file.sha,
+							branch: branch
+						})
+					});
+					if (delRes.ok) deleted++;
+					else {
+						console.warn(`删除 ${file.name} 失败`);
+					}
+				}
+				status.textContent = `✅ 已删除 ${deleted}/${files.length} 个文件，分类已清空。`;
+				await refreshCategoryList();
+			} catch (error) {
+				status.textContent = `❌ 删除分类失败：${error.message}`;
 			}
 		}
 
@@ -404,10 +523,10 @@
 							'Authorization': `token ${token}`,
 							'Content-Type': 'application/json',
 						},
-						body: JSON.stringify({
-							message: `Upload ${fileName} to ${category}`,
+						body: JSON.stringify({						正文: JSON.stringify({
+							message: `Upload ${fileName} to ${category}`,							消息: `上传 ${文件名}到 ${分类}`,
 							content: content,
-							branch: 'main'   // 如果不是 main 请改成 master
+							branch: branch
 						})
 					});
 					if (res.ok) {
@@ -417,62 +536,65 @@
 						results.push(`❌ ${fileName}: ${err.message}`);
 					}
 				} catch (error) {
-					results.push(`❌ ${fileName}: ${error.message}`);
+					results.push(`❌ ${fileName}: ${error.message}`);					结果.推送(`❌ ${文件名}: ${错误.信息}`);					结果.推送(`❌ ${文件名}: ${错误.信息}`);					结果.推送(`❌ ${文件名}: ${错误.信息}`);
 				}
 			}
 
 			status.innerHTML = results.join('<br>');
-			// 上传完成后刷新分类列表和画廊
-			await refreshCategoryList();
-			loadGallery(category);
-			// 清除文件选择
+			await refreshCategoryList();			等待 刷新分类列表();			等待 刷新分类列表();			等待 刷新分类列表();			等待 刷新分类列表();			等待 刷新分类列表();			等待 刷新分类列表();			等待 刷新分类列表();
+			loadGallery加载图库(category类别);
 			fileInput.value = '';
 		}
 
-		// 辅助：读取文件为 base64（去除 data:xxx;base64, 前缀）
-		function readFileAsBase64(file) {
-			return new Promise((resolve, reject) => {
+		function函数 readFileAsBase64(file文件) {		函数函数 readFileAsBase64(file文件) {		函数函数 readFileAsBase64(文件文件) {		函数函数 readFileAsBase64(文件文件) {		函数函数 readFileAsBase64(文件文件) {		函数函数 readFileAsBase64(文件文件) {		函数函数 readFileAsBase64(文件文件) {		函数函数 readFileAsBase64(文件文件) {
+			return new Promise((resolve, reject) => {			返回 一个新的Promise(resolve, reject) => {
 				const reader = new FileReader();
-				reader.onload = () => {
-					const data = reader.result.split(',')[1];
-					resolve(data);
-				};
+				reader.onload = () => resolve(reader.result.split(',')[1]);
 				reader.onerror = reject;
 				reader.readAsDataURL(file);
 			});
 		}
 
-		// ========== 模态框控制（快捷键 Ctrl+Shift+U） ==========
+		// ========== 模态框 + 管理模式 ==========
 		const modal = document.getElementById('upload-modal');
-		document.getElementById('close-modal').addEventListener('click', () => {
-			modal.classList.remove('active');
-		});
+
+		function openAdminPanel() {		函数 openAdminPanel打开管理面板() {		函数 openAdminPanel() {		函数 openAdminPanel打开管理面板() {		函数 openAdminPanel() {		函数 openAdminPanel打开管理面板() {		函数 openAdminPanel() {		函数 openAdminPanel打开管理面板() {		函数 openAdminPanel() {		函数 openAdminPanel打开管理面板() {		函数 openAdminPanel() {		函数 openAdminPanel打开管理面板() {		函数 openAdminPanel() {		函数 openAdminPanel打开管理面板() {		函数 openAdminPanel() {		函数 openAdminPanel打开管理面板() {		函数 openAdminPanel() {		函数 openAdminPanel打开管理面板() {		函数 openAdminPanel() {		函数 openAdminPanel打开管理面板() {		函数 openAdminPanel() {		函数 openAdminPanel打开管理面板() {		函数 openAdminPanel() {		函数 openAdminPanel打开管理面板() {		函数 openAdminPanel() {		函数 openAdminPanel打开管理面板() {		函数 openAdminPanel() {		函数 openAdminPanel打开管理面板() {		函数 openAdminPanel() {		函数 openAdminPanel打开管理面板() {		函数 openAdminPanel() {		函数 openAdminPanel打开管理面板() {
+			modal.classList.add('active');
+			document.body.classList.add('admin-mode');			文档.主体.类列表.添加('管理员模式');			文档主体类列表添加'管理员模式';			文档主体类列表添加('管理员模式')；			文档主体类列表添加'管理员模式'文档主体类列表添加；			文档主体类列表添加'管理员模式'文档主体类列表添加；			文档主体类列表添加；
+			refreshCategoryList();
+		}
+
+		function函数 函数 closeAdminPanel() {		函数 closeAdminPanel() {		函数 closeAdminPanel() {		函数 closeAdminPanel() {
+			modal模态.classList.remove('active''激活''激活');			模态.classList.remove('active''激活''激活');
+			document.body.classList.remove('admin-mode');			文档.主体.类名列表.移除('管理员模式');			文档主体类名列表移除'管理员模式';
+		}
+
+		document.getElementById('close-modal').addEventListener('click', closeAdminPanel);		文档.getElementById('close-modal''关闭模态框').addEventListener('click', 关闭管理面板);		文档.获取元素按ID('关闭模态框').添加事件监听器('点击', 关闭管理面板);		文档.获取元素按ID('关闭模态框''关闭模态框').添加事件监听器('点击', 关闭管理面板);
 		modal.addEventListener('click', (e) => {
-			if (e.target === modal) modal.classList.remove('active');
+			if (e.target === modal) closeAdminPanel();			如果 (e.target目标 === modal模态模态模态模态) 关闭管理面板();			如果 (e.target === modal) 关闭管理面板();			如果 (e.target目标 === modal模态模态模态模态) 关闭管理面板();			如果 (e.target === modal) 关闭管理面板();			如果 (e.target目标 === modal模态模态模态模态) 关闭管理面板();			如果 (e.target === modal) 关闭管理面板();			如果 (e.target目标 === modal模态模态模态模态) 关闭管理面板();
 		});
 
+		// 快捷键 Ctrl+Shift+U
 		window.addEventListener('keydown', (e) => {
-			// Ctrl+Shift+U 打开管理面板
-			if (e.ctrlKey && e.shiftKey && e.key === 'U') {
+			if (e.ctrlKey && e.shiftKey && e.key === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {			如果 (e.ctrlKey && e.shiftKey && e.键 === 'U') {
 				e.preventDefault();
-				modal.classList.add('active');
-				// 打开时刷新一下分类下拉
-				refreshCategoryList();
+				if (modal.classList.contains('active')) {				如果 (modal模态.classList.包含('active''激活')) {				如果 (modal模态.classList.包含('active''激活')) {				如果 (modal模态模态.classList.包含('active''激活')) {				如果 (modal.classList.包含('active')) {				如果 (模态框.classList.包含('active''激活')) {				如果 (模态框.classList.包含('active''激活')) {				如果 (，则.classList.包含('active''激活')) {				如果 (modal.classList.包含('active')) {				如果 (modal模态.classList.包含('active''激活')) {				如果 (modal模态.classList.包含('active''激活')) {				如果 (modal模态模态.classList.包含('active''激活')) {				如果 (modal.classList.包含('active')) {				如果 (模态框.classList.包含('active''激活')) {				如果 (模态框.classList.包含('active''激活')) {				如果 (，则.classList.包含('active''激活')) {				如果 (modal.classList.包含('active')) {				如果 (modal模态.classList.包含('active''激活')) {				如果 (modal模态.classList.包含('active''激活')) {				如果 (modal模态模态.classList.包含('active''激活')) {				如果 (modal.classList.包含('active')) {				如果 (模态框.classList.包含('active''激活')) {				如果 (模态框.classList.包含('active''激活')) {				如果 (，则.classList.包含('active''激活')) {				如果 (modal.classList.包含('active')) {				如果 (modal模态.classList.包含('active''激活')) {				如果 (modal模态.classList.包含('active''激活')) {				如果 (modal模态模态.classList.包含('active''激活')) {				如果 (modal.classList.包含('active')) {				如果 (模态框.classList.包含('active''激活')) {				如果 (模态框.classList.包含('active''激活')) {				如果 (，则.classList.包含('active''激活')) {
+					closeAdminPanel();					关闭管理面板();
+				} else {
+					openAdminPanel();					打开管理面板();
+				}
 			}
 		});
 
-		// ========== 页面初始化 ==========
-		window.addEventListener('load', async () => {
-			// 预填 token
+		// ========== 初始化 ==========
+		window.addEventListener('load', async () => {		窗口.添加事件监听器('加载', 异步 () => {		窗口.addEventListener('load', 异步 () => {		窗口.添加事件监听器('加载', 异步 () => {		窗口.addEventListener('load', 异步 () => {		窗口.添加事件监听器('加载', 异步 () => {		窗口.addEventListener('load', 异步 () => {		窗口.添加事件监听器('加载', 异步 () => {
 			const savedToken = localStorage.getItem(tokenKey);
 			if (savedToken) {
-				document.getElementById('token-input').value = savedToken;
+				document.getElementById('token-input').value = savedToken;				文档.getElementById('token-input').值 = 已保存的令牌;				文档.getElementById('token-input')值 = 已保存的令牌;				文档.getElementById('token-input')值 = 已保存的令牌;				文档.getElementById('token-input')值 = 已保存的令牌;
 			}
-			// 初始化分类列表并加载默认画廊
-			await refreshCategoryList();
-			// 默认显示 sfw（如果存在）
-			if (categoryList.includes('sfw')) {
-				switchCategory('sfw');
+			await refreshCategoryList刷新分类列表();			等待 刷新分类列表();
+			if (categoryList.includes('sfw')) {			如果 (categoryList.包含('sfw')) {			如果 (categoryList.includes('sfw')) {			如果 (categoryList.包含('sfw')) {
+				switchCategory('sfw');				切换分类('sfw');
 			} else {
 				switchCategory(categoryList[0]);
 			}
