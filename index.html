@@ -1,9 +1,4 @@
 <!DOCTYPE HTML>
-<!--
-	Lens by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
--->
 <html>
 	<head>
 		<title>咕咕鸡的 AI 作品集</title>
@@ -12,13 +7,13 @@
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 		<style>
-			/* 新画廊的样式 */
+			/* 画廊样式 */
 			.gallery {
 				display: flex;
 				flex-wrap: wrap;
 				gap: 10px;
 				justify-content: center;
-				margin-top: 1em;
+				margin: 1em 0;
 			}
 			.gallery img {
 				max-width: 300px;
@@ -26,141 +21,245 @@
 				border-radius: 8px;
 				box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 			}
+			/* 上传区域 */
+			#upload-section {
+				background: rgba(255,255,255,0.05);
+				padding: 1.5em;
+				border-radius: 8px;
+				max-width: 500px;
+				margin: 2em auto;
+				text-align: center;
+			}
+			#upload-section input, #upload-section select, #upload-section button {
+				margin: 5px;
+				padding: 8px 12px;
+				border-radius: 4px;
+				border: none;
+			}
+			#token-input {
+				width: 80%;
+			}
 		</style>
 	</head>
 	<body class="is-preload-0 is-preload-1 is-preload-2">
 
-		<!-- Main -->
-			<div id="main">
+		<div id="main">
 
-				<!-- Header -->
-					<header id="header">
-						<h1>咕咕鸡 <br />
-						AI 绘画 作品 仓库</h1>
-						<p>有好的作品会保存在这<br />
-						有时间就更新</p>
-						<ul class="actions">
-							<li><a href="#first" class="arrow scrolly">往下看作品</a></li>
-						</ul>
-					</header>
+			<!-- Header -->
+			<header id="header">
+				<h1>咕咕鸡<br />AI 绘画作品仓库</h1>
+				<p>有好的作品会保存在这<br />有时间就更新</p>
+				<ul class="actions">
+					<li><a href="#sfw-gallery" class="arrow scrolly">往下看作品</a></li>
+				</ul>
+			</header>
 
-				<!-- Thumbnail（原模板的缩略图区域，你可以保留，这里暂时用占位图） -->
-					<section id="thumbnails">
-						<article>
-							<a class="thumbnail" href="images/fulls/01.jpg" data-position="left center"><img src="images/thumbs/01.jpg" alt="" /></a>
-							<h2>Diam tempus accumsan</h2>
-							<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-						</article>
-						<article>
-							<a class="thumbnail" href="images/fulls/02.jpg"><img src="images/thumbs/02.jpg" alt="" /></a>
-							<h2>Vivamus convallis libero</h2>
-							<p>Sed velit lacus, laoreet at venenatis convallis in lorem tincidunt.</p>
-						</article>
-						<article>
-							<a class="thumbnail" href="images/fulls/03.jpg" data-position="top center"><img src="images/thumbs/03.jpg" alt="" /></a>
-							<h2>Nec accumsan enim felis</h2>
-							<p>Maecenas eleifend tellus ut turpis eleifend, vitae pretium faucibus.</p>
-						</article>
-						<article>
-							<a class="thumbnail" href="images/fulls/04.jpg"><img src="images/thumbs/04.jpg" alt="" /></a>
-							<h2>Donec maximus nisi eget</h2>
-							<p>Tristique in nulla vel congue. Sed sociis natoque parturient nascetur.</p>
-						</article>
-						<article>
-							<a class="thumbnail" href="images/fulls/05.jpg" data-position="top center"><img src="images/thumbs/05.jpg" alt="" /></a>
-							<h2>Nullam vitae nunc vulputate</h2>
-							<p>In pellentesque cursus velit id posuere. Donec vehicula nulla.</p>
-						</article>
-						<article>
-							<a class="thumbnail" href="images/fulls/06.jpg"><img src="images/thumbs/06.jpg" alt="" /></a>
-							<h2>Phasellus magna faucibus</h2>
-							<p>Nulla dignissim libero maximus tellus varius dictum ut posuere magna.</p>
-						</article>
-						<article>
-							<a class="thumbnail" href="images/fulls/07.jpg"><img src="images/thumbs/07.jpg" alt="" /></a>
-							<h2>Proin quis mauris</h2>
-							<p>Etiam ultricies, lorem quis efficitur porttitor, facilisis ante orci urna.</p>
-						</article>
-						<article>
-							<a class="thumbnail" href="images/fulls/08.jpg"><img src="images/thumbs/08.jpg" alt="" /></a>
-							<h2>Gravida quis varius enim</h2>
-							<p>Nunc egestas congue lorem. Nullam dictum placerat ex sapien tortor mattis.</p>
-						</article>
-						<article>
-							<a class="thumbnail" href="images/fulls/09.jpg"><img src="images/thumbs/09.jpg" alt="" /></a>
-							<h2>Morbi eget vitae adipiscing</h2>
-							<p>In quis vulputate dui. Maecenas metus elit, dictum praesent lacinia lacus.</p>
-						</article>
-						<article>
-							<a class="thumbnail" href="images/fulls/10.jpg"><img src="images/thumbs/10.jpg" alt="" /></a>
-							<h2>Habitant tristique senectus</h2>
-							<p>Vestibulum ante ipsum primis in faucibus orci luctus ac tincidunt dolor.</p>
-						</article>
-						<article>
-							<a class="thumbnail" href="images/fulls/11.jpg"><img src="images/thumbs/11.jpg" alt="" /></a>
-							<h2>Pharetra ex non faucibus</h2>
-							<p>Ut sed magna euismod leo laoreet congue. Fusce congue enim ultricies.</p>
-						</article>
-						<article>
-							<a class="thumbnail" href="images/fulls/12.jpg"><img src="images/thumbs/12.jpg" alt="" /></a>
-							<h2>Mattis lorem sodales</h2>
-							<p>Feugiat auctor leo massa, nec vestibulum nisl erat faucibus, rutrum nulla.</p>
-						</article>
-					</section>
-
-				<!-- 正常作品板块 -->
-				<section id="sfw-gallery" style="padding: 2em; text-align: center;">
-					<h2>🖼️ 正常作品</h2>
-					<div class="gallery">
-						<!-- ⚠️ 把下面的文件名改成你实际上传的图片文件名 -->
-						<img src="images/sfw/图片1.jpg" alt="正常作品1">
-						<img src="images/sfw/图片2.jpg" alt="正常作品2">
-						<!-- 需要更多图片就继续复制上行，改 src -->
-					</div>
-				</section>
-
-				<!-- NSFW 查看按钮 -->
-				<div style="text-align: center; margin: 2em;">
-					<button id="show-nsfw" onclick="showNsfw()" style="padding: 10px 20px; font-size: 16px;">
-						🔞 查看 NSFW 作品（需成年）
-					</button>
-				</div>
-
-				<!-- NSFW 作品板块（默认隐藏） -->
-				<section id="nsfw-gallery" style="display: none; padding: 2em; text-align: center;">
-					<h2>🔞 NSFW 作品</h2>
-					<div class="gallery">
-						<img src="images/nsfw/图片1.jpg" alt="NSFW作品1">
-						<!-- 继续添加 -->
-					</div>
-				</section>
-
-				<!-- Footer -->
-					<footer id="footer">
-						<h2>联系我</h2>
-						<p>对作品感兴趣？一起合作？发邮件或社交媒体找我。</p>
-						<div>
-							<a href="mailto:1599316531@qq.com" class="icon solid fa-envelope"> 邮箱</a>
-							<a href="https://twitter.com/youraccount" class="icon brands fa-twitter"> Twitter</a>
-							<a href="https://www.instagram.com/youraccount" class="icon brands fa-instagram"> Instagram</a>
-						</div>
-					</footer>
-
+			<!-- 上传区域（需要 Token） -->
+			<div id="upload-section">
+				<h3>📤 上传新作品</h3>
+				<p style="font-size:0.9em; opacity:0.8;">
+					首次使用请粘贴你的 GitHub Token（保存在本地浏览器）：<br>
+					<input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxx" />
+					<button onclick="saveToken()">保存</button>
+				</p>
+				<input type="file" id="file-input" accept="image/*" />
+				<select id="category-select">
+					<option value="sfw">🖼️ 正常作品 (SFW)</option>
+					<option value="nsfw">🔞 NSFW 作品</option>
+				</select>
+				<button onclick="uploadImage()">上传图片</button>
+				<p id="upload-status" style="margin-top:10px; font-size:0.9em;"></p>
 			</div>
 
-		<!-- Scripts（原模板的） -->
+			<!-- 正常作品画廊（动态加载） -->
+			<section id="sfw-gallery" style="padding: 2em; text-align: center;">
+				<h2>🖼️ 正常作品</h2>
+				<div class="gallery" id="sfw-container"></div>
+			</section>
+
+			<!-- NSFW 按钮 / 画廊 -->
+			<div style="text-align: center; margin: 2em;">
+				<button id="show-nsfw" onclick="toggleNsfw()" style="padding: 10px 20px; font-size: 16px;">
+					🔞 查看 NSFW 作品（需成年）
+				</button>
+			</div>
+			<section id="nsfw-gallery" style="display: none; padding: 2em; text-align: center;">
+				<h2>🔞 NSFW 作品</h2>
+				<div class="gallery" id="nsfw-container"></div>
+			</section>
+
+			<!-- Footer -->
+			<footer id="footer">
+				<h2>联系我</h2>
+				<p>对作品感兴趣？一起合作？发邮件或社交媒体找我。</p>
+				<div>
+					<a href="mailto:1599316531@qq.com" class="icon solid fa-envelope"> 邮箱</a>
+					<a href="https://twitter.com/youraccount" class="icon brands fa-twitter"> Twitter</a>
+					<a href="https://www.instagram.com/youraccount" class="icon brands fa-instagram"> Instagram</a>
+				</div>
+			</footer>
+
+		</div>
+
+		<!-- 原模板脚本（Lens 模板依赖） -->
 		<script src="assets/js/jquery.min.js"></script>
 		<script src="assets/js/browser.min.js"></script>
 		<script src="assets/js/breakpoints.min.js"></script>
 		<script src="assets/js/main.js"></script>
 
-		<!-- NSFW 显示函数 -->
+		<!-- 动态加载 + 上传逻辑 -->
 		<script>
-			function showNsfw() {
-				document.getElementById('nsfw-gallery').style.display = 'block';
-				document.getElementById('show-nsfw').style.display = 'none';
+			// ========== 配置 ==========
+			// 自动从当前域名解析仓库所有者与仓库名（适用于 GitHub Pages）
+			const host = window.location.host;          // 例如 "用户名.github.io"
+			const pathParts = window.location.pathname.split('/').filter(p => p);
+			// 如果是用户页面：username.github.io -> owner=username, repo=username.github.io
+			// 如果是项目页面：username.github.io/repo -> owner=username, repo=repo
+			let owner, repo;
+			if (host.endsWith('.github.io')) {
+				owner = host.split('.')[0];
+				if (pathParts.length > 0) {
+					repo = pathParts[0];             // 项目页面
+				} else {
+					repo = host;                     // 用户页面
+				}
+			} else {
+				// 自定义域名的情况需要手动改成你的用户名和仓库名
+				owner = '你的GitHub用户名';
+				repo = '你的仓库名';
 			}
-		</script>
 
+			// ========== Token 管理 ==========
+			const tokenKey = 'github_token_for_uploader';
+			function getToken() {
+				return localStorage.getItem(tokenKey);
+			}
+			function saveToken() {
+				const token = document.getElementById('token-input').value.trim();
+				if (token) {
+					localStorage.setItem(tokenKey, token);
+					alert('Token 已保存！');
+					// 刷新画廊（使用新 token）
+					loadGallery('sfw');
+					loadGallery('nsfw');
+				}
+			}
+
+			// ========== 切换 NSFW 显示 ==========
+			function toggleNsfw() {
+				const nsfwSection = document.getElementById('nsfw-gallery');
+				const btn = document.getElementById('show-nsfw');
+				if (nsfwSection.style.display === 'none') {
+					nsfwSection.style.display = 'block';
+					btn.textContent = '🔞 隐藏 NSFW 作品';
+					// 如果还没加载，就加载
+					if (document.getElementById('nsfw-container').children.length === 0) {
+						loadGallery('nsfw');
+					}
+				} else {
+					nsfwSection.style.display = 'none';
+					btn.textContent = '🔞 查看 NSFW 作品（需成年）';
+				}
+			}
+
+			// ========== 加载图片列表 ==========
+			async function loadGallery(category) {
+				const container = document.getElementById(category + '-container');
+				container.innerHTML = '<p>加载中...</p>';
+
+				const token = getToken();
+				const headers = token ? { 'Authorization': `token ${token}` } : {};
+
+				try {
+					const url = `https://api.github.com/repos/${owner}/${repo}/contents/images/${category}`;
+					const response = await fetch(url, { headers });
+					if (!response.ok) {
+						throw new Error('无法读取文件夹（可能需要 Token）');
+					}
+					const files = await response.json();
+					container.innerHTML = '';
+					if (!Array.isArray(files) || files.length === 0) {
+						container.innerHTML = '<p>暂无作品，去上传吧！</p>';
+						return;
+					}
+					files.forEach(file => {
+						if (file.type === 'file' && file.name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+							const img = document.createElement('img');
+							img.src = file.download_url;
+							img.alt = file.name;
+							img.loading = 'lazy';
+							container.appendChild(img);
+						}
+					});
+				} catch (error) {
+					container.innerHTML = `<p style="color:red;">加载失败：${error.message}</p>`;
+				}
+			}
+
+			// ========== 上传图片 ==========
+			async function uploadImage() {
+				const token = getToken();
+				if (!token) {
+					alert('请先输入并保存 GitHub Token！');
+					return;
+				}
+
+				const fileInput = document.getElementById('file-input');
+				const category = document.getElementById('category-select').value;
+				const status = document.getElementById('upload-status');
+
+				if (!fileInput.files || fileInput.files.length === 0) {
+					alert('请先选择一张图片');
+					return;
+				}
+
+				const file = fileInput.files[0];
+				const fileName = file.name.replace(/\s+/g, '_'); // 替换空格
+				const path = `images/${category}/${fileName}`;
+
+				status.textContent = '正在上传...';
+
+				// 将文件转成 Base64
+				const reader = new FileReader();
+				reader.onload = async function(e) {
+					const content = e.target.result.split(',')[1]; // 去掉 "data:image/...;base64," 前缀
+
+					try {
+						const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+						const response = await fetch(url, {
+							method: 'PUT',
+							headers: {
+								'Authorization': `token ${token}`,
+								'Content-Type': 'application/json',
+							},
+							body: JSON.stringify({
+								message: `Upload ${fileName}`,
+								content: content,
+								branch: 'main',  // 或者你的默认分支，如 'master'
+							})
+						});
+
+						if (response.ok) {						如果 (响应.成功) {
+							status.textContent = `✅ 上传成功！稍等片刻将刷新画廊。`;
+							// 重新加载对应画廊
+							setTimeout(() => loadGallery(category), 2000);
+						} else {
+							const err = await response.json();
+							status.textContent = `❌ 上传失败：${err.message}`;
+						}
+					} catch (error) {
+						status.textContent = `❌ 网络错误：${error.message}`;
+					}
+				};
+				reader.readAsDataURL(file);
+			}
+
+			// ========== 页面启动 ==========
+			window.addEventListener('load', () => {
+				// 自动加载 SFW 画廊
+				loadGallery('sfw');
+				// NSFW 画廊只在首次点击后加载
+			});
+		</script>
 	</body>
 </html>
