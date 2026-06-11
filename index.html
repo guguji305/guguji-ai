@@ -12,58 +12,48 @@
 	<link rel="stylesheet" href="assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 	<style>
-		/* ========== 分类标签栏 (适配 Lens 深色主题) ========== */
+		/* ========== 1. 分类标签栏 (适配移动端与深色主题) ========== */
 		#category-tabs {
 			text-align: center;
-			padding: 1.5em 1em;
+			padding: 1em;
 			position: sticky;
 			top: 0;
-			background: rgba(24, 24, 24, 0.85);
+			background: rgba(24, 24, 24, 0.9);
 			z-index: 100;
-			backdrop-filter: blur(8px);
-			border-bottom: 1px solid rgba(255,255,255,0.1);
+			backdrop-filter: blur(10px);
+			border-bottom: 1px solid rgba(255,255,255,0.05);
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+			gap: 8px;
 		}
 		#category-tabs button {
-			margin: 5px;
-			padding: 8px 20px;
+			padding: 8px 18px;
 			border: 1px solid rgba(255,255,255,0.2);
 			border-radius: 20px;
 			background: rgba(255,255,255,0.05);
-			color: #ddd;
+			color: #ccc;
+			font-size: 0.9em;
 			font-weight: bold;
 			cursor: pointer;
 			transition: 0.2s;
 		}
-		#category-tabs button:hover { background: rgba(255,255,255,0.15); }
-		#category-tabs button.active {
-			background: #fff;
-			color: #222;
-			border-color: #fff;
-		}
-		#category-tabs button.nsfw-tab {
-			background: rgba(200,0,0,0.4);
-			color: #ffcccc;
-			border-color: rgba(255,0,0,0.5);
-		}
-		#category-tabs button.nsfw-tab.active {
-			background: #e74c3c;
-			color: white;
-			border-color: #e74c3c;
-		}
+		#category-tabs button:hover { background: rgba(255,255,255,0.15); color: #fff; }
+		#category-tabs button.active { background: #fff; color: #222; border-color: #fff; }
+		#category-tabs button.nsfw-tab { background: rgba(200,0,0,0.3); color: #ffcccc; border-color: rgba(255,0,0,0.4); }
+		#category-tabs button.nsfw-tab.active { background: #e74c3c; color: white; border-color: #e74c3c; }
 
-		/* ========== 删除按钮 (管理模式显示) ========== */
+		/* ========== 2. 画廊与删除按钮 ========== */
+		#thumbnails .thumbs article { position: relative; } 
 		.delete-img-btn {
 			position: absolute;
-			top: 10px;
-			right: 10px;
+			top: 10px; right: 10px;
 			background: rgba(231, 76, 60, 0.9);
 			color: white;
 			border: none;
 			border-radius: 50%;
-			width: 32px;
-			height: 32px;
-			font-size: 18px;
-			line-height: 32px;
+			width: 32px; height: 32px;
+			font-size: 18px; line-height: 32px;
 			text-align: center;
 			cursor: pointer;
 			display: none;
@@ -71,33 +61,35 @@
 			box-shadow: 0 2px 8px rgba(0,0,0,0.5);
 		}
 		body.admin-mode .delete-img-btn { display: block; }
-		#thumbnails .thumbs article { position: relative; } /* 为删除按钮提供定位上下文 */
 
-		/* ========== 查看器微调 ========== */
-		#viewer .image img {
-			max-width: 100%;
-			max-height: 100vh;
-			object-fit: contain;
+		/* ========== 3. 查看器微调 (确保移动端点击热区) ========== */
+		#viewer .nav-next, #viewer .nav-previous {
+			cursor: pointer;
+			/* 确保移动端有足够的点击区域 */
+			min-width: 44px; 
+			min-height: 44px;
 		}
 
-		/* ========== 上传管理模态框 ========== */
+		/* ========== 4. 管理模态框 (适配小屏幕) ========== */
 		#upload-modal {
 			display: none;
 			position: fixed;
 			top: 0; left: 0; width: 100%; height: 100%;
-			background: rgba(0,0,0,0.8);
-			z-index: 10001; /* 确保在 viewer 之上 */
+			background: rgba(0,0,0,0.85);
+			z-index: 10001; 
 			justify-content: center;
 			align-items: center;
 		}
 		#upload-modal.active { display: flex; }
 		#upload-panel {
-			background: #2a2a2a;
+			background: #222;
 			color: #eee;
-			padding: 2em;
+			padding: 1.5em;
 			border-radius: 12px;
-			max-width: 500px;
+			max-width: 450px;
 			width: 90%;
+			max-height: 90vh;
+			overflow-y: auto;
 			box-shadow: 0 20px 50px rgba(0,0,0,0.8);
 			text-align: center;
 			position: relative;
@@ -105,45 +97,34 @@
 		}
 		#upload-panel h3 { color: #fff; margin-top: 0; }
 		#upload-panel input, #upload-panel select, #upload-panel button {
-			margin: 8px 0;
-			padding: 10px;
-			border-radius: 6px;
-			border: 1px solid #555;
-			background: #333;
-			color: #eee;
-			width: 100%;
-			box-sizing: border-box;
+			margin: 6px 0; padding: 10px; border-radius: 6px;
+			border: 1px solid #555; background: #333; color: #eee;
+			width: 100%; box-sizing: border-box; font-size: 14px;
 		}
 		#upload-panel button {
-			background: #fff;
-			color: #222;
-			cursor: pointer;
-			border: none;
-			font-weight: bold;
-			transition: 0.2s;
+			background: #fff; color: #222; cursor: pointer;
+			border: none; font-weight: bold; transition: 0.2s;
 		}
 		#upload-panel button:hover { background: #ddd; }
 		#close-modal {
-			position: absolute;
-			top: 10px; right: 14px;
-			background: none !important;
-			border: none;
-			font-size: 28px;
-			color: #999;
-			cursor: pointer;
-			width: auto;
+			position: absolute; top: 10px; right: 14px;
+			background: none !important; border: none;
+			font-size: 28px; color: #999; cursor: pointer; width: auto;
 		}
-		.hint { font-size: 0.85em; opacity: 0.6; }
+		.hint { font-size: 0.8em; opacity: 0.6; }
 		.danger-btn { background: #c0392b !important; color: white !important; }
 		.danger-btn:hover { background: #e74c3c !important; }
-		#upload-status { margin-top: 15px; font-size: 0.9em; color: #aaa; text-align: left; background: #1a1a1a; padding: 10px; border-radius: 6px; max-height: 150px; overflow-y: auto;}
+		#upload-status { 
+			margin-top: 15px; font-size: 0.85em; color: #aaa; 
+			text-align: left; background: #111; padding: 10px; 
+			border-radius: 6px; max-height: 120px; overflow-y: auto;
+		}
 	</style>
 </head>
 <body class="is-preload-0 is-preload-1 is-preload-2">
 
 	<!-- Main -->
 	<div id="main">
-
 		<!-- Header -->
 		<header id="header">
 			<h1>咕咕鸡 <br />AI 绘画作品集</h1>
@@ -153,10 +134,9 @@
 			</ul>
 		</header>
 
-		<!-- Thumbnails (动态画廊) -->
+		<!-- Thumbnails -->
 		<section id="thumbnails">
 			<div id="category-tabs"></div>
-			<!-- 注意：这里必须使用 class="thumbs" 以适配 Lens 模板 -->
 			<div class="thumbs" id="gallery-container">
 				<p style="text-align:center; padding:3em; color:#888;">⏳ 加载作品中...</p>
 			</div>
@@ -172,20 +152,18 @@
 				<li><a href="https://www.instagram.com/youraccount" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
 			</ul>
 		</footer>
-
 	</div>
 
-	<!-- Viewer (必须使用 id="viewer" 及内部标准结构) -->
+	<!-- Viewer (Lens 原生结构，不可随意修改) -->
 	<div id="viewer">
 		<div class="inner">
 			<div class="nav-next"></div>
 			<div class="nav-previous"></div>
 			<div class="toggle"></div>
-			<article>
-				<h2 id="viewer-title">作品标题</h2>
-				<p id="viewer-desc"></p>
-				<div class="image"><img src="" alt="" id="viewer-img" /></div>
-			</article>
+		</div>
+		<div class="slide loading">
+			<div class="caption"></div>
+			<div class="image" style="background-position: center center;"></div>
 		</div>
 	</div>
 
@@ -199,7 +177,7 @@
 				<input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxx" />
 				<button onclick="saveToken()" style="width:auto; padding:8px 20px;">保存 Token</button>
 			</div>
-			<hr style="border-color:#444;">
+			<hr style="border-color:#444; margin: 15px 0;">
 			<div style="text-align: left;">
 				<label>📁 当前分类</label>
 				<select id="category-select"></select>
@@ -208,13 +186,13 @@
 					<button onclick="addCategory()" style="width:auto; padding:8px 15px;">创建</button>
 				</div>
 			</div>
-			<hr style="border-color:#444;">
+			<hr style="border-color:#444; margin: 15px 0;">
 			<div style="text-align: left;">
 				<label>🖼️ 选择图片（可多选）</label>
 				<input type="file" id="file-input" accept="image/*" multiple />
 			</div>
 			<button onclick="uploadImages()">⬆️ 上传所有选中图片</button>
-			<hr style="border-color:#444;">
+			<hr style="border-color:#444; margin: 15px 0;">
 			<button class="danger-btn" onclick="deleteCategory()">🗑️ 删除当前分类（所有图片）</button>
 			<p style="margin-top:10px; font-size:0.8em; color:#888;">⚠️ 删除后不可恢复，请谨慎操作</p>
 			<div id="upload-status"></div>
@@ -228,7 +206,7 @@
 	<script src="assets/js/main.js"></script>
 
 	<script>
-		// ========== 仓库信息 ==========
+		// ========== 1. 仓库基础配置 ==========
 		const host = window.location.host;
 		const pathParts = window.location.pathname.split('/').filter(p => p);
 		let owner, repo;
@@ -249,14 +227,13 @@
 				localStorage.setItem(tokenKey, token);
 				alert('✅ Token 已保存！');
 				refreshCategoryList();
-			} else {
-				alert('请输入有效的 Token');
-			}
+			} else { alert('请输入有效的 Token'); }
 		}
 
 		let currentCategory = 'sfw';
 		let categoryList = ['sfw', 'nsfw'];
 
+		// ========== 2. 分类与画廊数据加载 ==========
 		async function fetchCategories() {
 			const token = getToken();
 			const headers = token ? { 'Authorization': `token ${token}` } : {};
@@ -310,12 +287,9 @@
 			localStorage.setItem('custom_categories', JSON.stringify(categoryList));
 			const select = document.getElementById('category-select');
 			const opt = document.createElement('option');
-			opt.value = name;
-			opt.textContent = name;
-			select.appendChild(opt);
-			select.value = name;
-			renderCategoryTabs(categoryList);
-			input.value = '';
+			opt.value = name; opt.textContent = name;
+			select.appendChild(opt); select.value = name;
+			renderCategoryTabs(categoryList); input.value = '';
 		}
 
 		function renderCategoryTabs(categories) {
@@ -341,10 +315,15 @@
 			loadGallery(category);
 		}
 
+		// ========== 3. 渲染画廊 (核心) ==========
+		let currentGalleryImages = []; // 存储当前分类图片，用于 Viewer 翻页
+
 		async function loadGallery(category) {
 			if (!category) category = currentCategory || 'sfw';
 			const container = document.getElementById('gallery-container');
 			container.innerHTML = '<p style="text-align:center; padding:3em; color:#888;">⏳ 加载中...</p>';
+			currentGalleryImages = []; // 清空旧数据
+			
 			const token = getToken();
 			const headers = token ? { 'Authorization': `token ${token}` } : {};
 			
@@ -359,27 +338,24 @@
 					throw new Error(`读取失败 (${res.status})`);
 				}
 				const files = await res.json();
-				if (!Array.isArray(files) || files.length === 0) {
-					container.innerHTML = '<p style="text-align:center; padding:3em; color:#888;">暂无作品</p>';
-					return;
-				}
-				
 				const imageFiles = files.filter(f => f.type === 'file' && f.name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i));
-				container.innerHTML = '';
 				
+				container.innerHTML = '';
 				if (imageFiles.length === 0) {
 					container.innerHTML = '<p style="text-align:center; padding:3em; color:#888;">暂无图片</p>';
 					return;
 				}
 
-				// 生成 Lens 模板标准的 <article> 结构
 				imageFiles.forEach(file => {
 					if (!file.download_url) return;
+					
+					const cleanTitle = file.name.replace(/\.[^/.]+$/, "").replace(/_/g, ' ');
+					currentGalleryImages.push({ url: file.download_url, title: cleanTitle });
 					
 					const article = document.createElement('article');
 					const a = document.createElement('a');
 					a.className = 'thumbnail';
-					a.href = file.download_url;
+					a.href = file.download_url; 
 					
 					const img = document.createElement('img');
 					img.src = file.download_url;
@@ -388,16 +364,13 @@
 					a.appendChild(img);
 					
 					const h2 = document.createElement('h2');
-					// 美化文件名：去掉后缀，把下划线换成空格
-					h2.textContent = file.name.replace(/\.[^/.]+$/, "").replace(/_/g, ' '); 
+					h2.textContent = cleanTitle;
 					
 					const delBtn = document.createElement('button');
 					delBtn.className = 'delete-img-btn';
 					delBtn.innerHTML = '✕';
-					delBtn.title = '删除此图片';
 					delBtn.onclick = (e) => {
-						e.preventDefault();
-						e.stopPropagation();
+						e.preventDefault(); e.stopPropagation();
 						deleteImage(file.path, file.sha, file.name);
 					};
 					
@@ -411,8 +384,9 @@
 			}
 		}
 
+		// ========== 4. 图片与分类的增删 ==========
 		async function deleteImage(path, sha, fileName) {
-			if (!confirm(`确定要删除 "${fileName}" 吗？此操作不可恢复！`)) return;
+			if (!confirm(`确定要删除 "${fileName}" 吗？`)) return;
 			const token = getToken();
 			if (!token) return alert('请先保存 GitHub Token');
 			try {
@@ -421,34 +395,25 @@
 					headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
 					body: JSON.stringify({ message: `Delete ${fileName}`, sha, branch })
 				});
-				if (res.ok) {
-					alert(`已删除 ${fileName}`);
-					loadGallery(currentCategory);
-				} else {
-					const err = await res.json();
-					alert(`删除失败：${err.message}`);
-				}
+				if (res.ok) { alert(`已删除 ${fileName}`); loadGallery(currentCategory); }
+				else { const err = await res.json(); alert(`删除失败：${err.message}`); }
 			} catch (error) { alert(`网络错误：${error.message}`); }
 		}
 
 		async function deleteCategory() {
 			const category = document.getElementById('category-select').value;
-			if (!confirm(`⚠️ 将删除“${category}”作品集及其所有图片！\n此操作不可恢复，确定继续吗？`)) return;
+			if (!confirm(`⚠️ 将删除“${category}”所有图片！确定继续吗？`)) return;
 			const token = getToken();
 			if (!token) return alert('请先保存 GitHub Token');
 			const status = document.getElementById('upload-status');
-			status.textContent = `🗑️ 正在删除“${category}”中的所有文件...`;
+			status.textContent = `🗑️ 正在删除...`;
 			try {
 				const listRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/images/${category}`, {
 					headers: { 'Authorization': `token ${token}` }
 				});
-				if (!listRes.ok) throw new Error(`无法获取文件列表 (${listRes.status})`);
+				if (!listRes.ok) throw new Error(`无法获取文件列表`);
 				const files = await listRes.json();
-				if (!Array.isArray(files) || files.length === 0) {
-					status.textContent = '✅ 分类已空。';
-					await refreshCategoryList();
-					return;
-				}
+				if (!Array.isArray(files) || files.length === 0) { status.textContent = '✅ 分类已空。'; await refreshCategoryList(); return; }
 				let deleted = 0;
 				for (const file of files) {
 					const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${file.path}`, {
@@ -460,16 +425,16 @@
 				}
 				status.textContent = `✅ 已删除 ${deleted}/${files.length} 个文件。`;
 				await refreshCategoryList();
-			} catch (error) { status.textContent = `❌ 删除分类失败：${error.message}`; }
+			} catch (error) { status.textContent = `❌ 失败：${error.message}`; }
 		}
 
 		async function uploadImages() {
 			const token = getToken();
-			if (!token) return alert('请先输入并保存 GitHub Token！');
+			if (!token) return alert('请先保存 Token！');
 			const fileInput = document.getElementById('file-input');
 			const category = document.getElementById('category-select').value;
 			const status = document.getElementById('upload-status');
-			if (!fileInput.files || fileInput.files.length === 0) return alert('请至少选择一张图片');
+			if (!fileInput.files || fileInput.files.length === 0) return alert('请选择图片');
 			status.innerHTML = `⏳ 正在上传 ${fileInput.files.length} 个文件...`;
 			const results = [];
 			for (let i = 0; i < fileInput.files.length; i++) {
@@ -485,10 +450,7 @@
 						body: JSON.stringify({ message: `Upload ${fileName}`, content, branch })
 					});
 					if (res.ok) results.push(`✅ ${fileName}`);
-					else {
-						const err = await res.json();
-						results.push(`❌ ${fileName}: ${err.message}`);
-					}
+					else { const err = await res.json(); results.push(`❌ ${fileName}: ${err.message}`); }
 				} catch (error) { results.push(`❌ ${fileName}: ${error.message}`); }
 			}
 			status.innerHTML = results.join('<br>');
@@ -506,52 +468,86 @@
 			});
 		}
 
-		// ========== 查看器控制 (适配 Lens 原生 Viewer) ==========
-		function openViewer(imageUrl, title) {
+		// ========== 5. 查看器控制 (完全接管，修复翻页与移动端适配) ==========
+		let currentImageIndex = 0;
+
+		function openViewer(index) {
+			if (index < 0 || index >= currentGalleryImages.length) return;
+			currentImageIndex = index;
+			
 			const viewer = document.getElementById('viewer');
-			const img = document.getElementById('viewer-img');
-			const titleEl = document.getElementById('viewer-title');
-			if (!viewer || !img) return;
+			const slide = viewer.querySelector('.slide');
+			const imageDiv = slide.querySelector('.image');
+			const caption = slide.querySelector('.caption');
 			
-			img.src = imageUrl;
-			if(titleEl) titleEl.textContent = title || '';
+			const imgData = currentGalleryImages[currentImageIndex];
+			imageDiv.style.backgroundImage = `url('${imgData.url}')`;
+			if (caption) caption.innerHTML = imgData.title ? `<h2>${imgData.title}</h2>` : '';
 			
-			viewer.classList.add('visible');
-			document.body.classList.add('is-viewer-active'); // Lens 模板使用的 body class
+			slide.classList.remove('loading');
+			viewer.classList.add('active');
+			document.body.classList.add('is-viewer-active');
 		}
 
 		function closeViewer() {
 			const viewer = document.getElementById('viewer');
-			if (!viewer) return;
-			viewer.classList.remove('visible');
+			if (!viewer.classList.contains('active')) return;
+			viewer.classList.remove('active');
 			document.body.classList.remove('is-viewer-active');
+			setTimeout(() => {
+				const imageDiv = viewer.querySelector('.slide .image');
+				if (imageDiv) imageDiv.style.backgroundImage = 'none';
+				const slide = viewer.querySelector('.slide');
+				if (slide) slide.classList.add('loading');
+			}, 500);
 		}
 
-		// 拦截缩略图点击事件
+		function nextImage() {
+			let nextIndex = currentImageIndex + 1;
+			if (nextIndex >= currentGalleryImages.length) nextIndex = 0;
+			openViewer(nextIndex);
+		}
+
+		function prevImage() {
+			let prevIndex = currentImageIndex - 1;
+			if (prevIndex < 0) prevIndex = currentGalleryImages.length - 1;
+			openViewer(prevIndex);
+		}
+
+		// 事件绑定：缩略图点击
 		document.getElementById('gallery-container').addEventListener('click', function(e) {
-			const a = e.target.closest('a.thumbnail');
-			if (!a) return;
+			if (e.target.closest('.delete-img-btn')) return; // 忽略删除按钮
+			const article = e.target.closest('article');
+			if (!article) return;
 			
-			e.preventDefault(); // 阻止跳转
+			e.preventDefault(); 
 			e.stopPropagation();
 			
-			const imgSrc = a.getAttribute('href');
-			const title = a.parentElement.querySelector('h2')?.textContent || '';
-			openViewer(imgSrc, title);
+			const articles = Array.from(this.querySelectorAll('article'));
+			const index = articles.indexOf(article);
+			if (index !== -1) openViewer(index);
 		});
 
-		// 关闭查看器事件
+		// 事件绑定：Viewer 内部按钮
+		document.querySelector('#viewer .nav-next').addEventListener('click', (e) => { e.stopPropagation(); nextImage(); });
+		document.querySelector('#viewer .nav-previous').addEventListener('click', (e) => { e.stopPropagation(); prevImage(); });
 		document.querySelector('#viewer .toggle').addEventListener('click', closeViewer);
+		
+		// 事件绑定：点击 Viewer 空白处关闭
 		document.querySelector('#viewer .inner').addEventListener('click', function(e) {
-			if(e.target === this) closeViewer(); // 点击空白处关闭
-		});
-		window.addEventListener('keydown', function(e) {
-			if (e.key === 'Escape' && document.getElementById('viewer').classList.contains('visible')) {
-				closeViewer();
-			}
+			if (e.target === this) closeViewer(); 
 		});
 
-		// ========== 管理模态框 ==========
+		// 事件绑定：键盘控制
+		window.addEventListener('keydown', function(e) {
+			const viewer = document.getElementById('viewer');
+			if (!viewer.classList.contains('active')) return;
+			if (e.key === 'Escape') closeViewer();
+			if (e.key === 'ArrowRight') nextImage();
+			if (e.key === 'ArrowLeft') prevImage();
+		});
+
+		// ========== 6. 管理模态框控制 ==========
 		const modal = document.getElementById('upload-modal');
 		function openAdminPanel() {
 			modal.classList.add('active');
@@ -564,6 +560,8 @@
 		}
 		document.getElementById('close-modal').addEventListener('click', closeAdminPanel);
 		modal.addEventListener('click', e => { if (e.target === modal) closeAdminPanel(); });
+		
+		// 快捷键 Ctrl+Shift+U 打开管理面板
 		window.addEventListener('keydown', e => {
 			if (e.ctrlKey && e.shiftKey && e.key === 'U') {
 				e.preventDefault();
@@ -571,7 +569,7 @@
 			}
 		});
 
-		// ========== 初始化 ==========
+		// ========== 7. 初始化 ==========
 		window.addEventListener('load', async () => {
 			const savedToken = localStorage.getItem(tokenKey);
 			if (savedToken) document.getElementById('token-input').value = savedToken;
