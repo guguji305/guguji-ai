@@ -7,7 +7,73 @@
 	<link rel="stylesheet" href="assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 	<style>
-		/* ===== 分类标签栏 ===== */
+		/* ===== 整体布局：左侧查看器 + 右侧内容 ===== */
+		#main {
+			display: flex;
+			flex-direction: row;
+			min-height: 100vh;
+		}
+		/* 左侧查看器 */
+		#viewer-panel {
+			flex: 0 0 50%;
+			max-width: 50%;
+			position: sticky;
+			top: 0;
+			height: 100vh;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			background: #111;
+			color: white;
+			padding: 20px;
+			box-sizing: border-box;
+			overflow: hidden;
+		}
+		#viewer-panel img {
+			max-width: 90%;
+			max-height: 80vh;
+			object-fit: contain;
+			border-radius: 8px;
+			transition: opacity 0.2s;
+		}
+		#viewer-panel .nav-buttons {
+			margin-top: 15px;
+			display: flex;
+			gap: 20px;
+		}
+		#viewer-panel .nav-buttons button {
+			background: rgba(255,255,255,0.2);
+			border: none;
+			color: white;
+			font-size: 2em;
+			padding: 10px 20px;
+			border-radius: 8px;
+			cursor: pointer;
+			transition: background 0.2s;
+		}
+		#viewer-panel .nav-buttons button:hover {
+			background: rgba(255,255,255,0.4);
+		}
+		#viewer-panel .image-counter {
+			margin-top: 10px;
+			font-size: 0.9em;
+			opacity: 0.7;
+		}
+		#viewer-panel .placeholder {
+			font-size: 1.4em;
+			opacity: 0.5;
+			text-align: center;
+		}
+
+		/* 右侧内容区域 */
+		#right-content {
+			flex: 1;
+			overflow-y: auto;
+			height: 100vh;
+		}
+
+		/* 原样式保持不变（稍作适配） */
 		#category-tabs {
 			text-align: center;
 			margin: 2em 0 0.5em;
@@ -37,7 +103,6 @@
 			background: red;
 		}
 
-		/* ===== 画廊图片容器 ===== */
 		.gallery {
 			display: flex;
 			flex-wrap: wrap;
@@ -49,6 +114,7 @@
 		.img-wrapper {
 			position: relative;
 			display: inline-block;
+			cursor: pointer;
 		}
 		.img-wrapper img {
 			max-width: 300px;
@@ -56,7 +122,6 @@
 			border-radius: 10px;
 			box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 		}
-		/* 删除按钮（默认隐藏，管理模式显示） */
 		.delete-img-btn {
 			position: absolute;
 			top: 8px;
@@ -74,12 +139,10 @@
 			display: none;
 			z-index: 5;
 		}
-		/* 管理模式时显示删除按钮 */
 		body.admin-mode .delete-img-btn {
 			display: block;
 		}
 
-		/* ===== 上传模态框 ===== */
 		#upload-modal {
 			display: none;
 			position: fixed;
@@ -145,31 +208,44 @@
 
 	<div id="main">
 
-		<header id="header">
-			<h1>咕咕鸡<br />AI 绘画作品仓库</h1>
-			<p>有好的作品会保存在这<br />有时间就更新</p>
-		</header>
-
-		<!-- 动态分类标签栏 -->
-		<div id="category-tabs"></div>
-
-		<!-- 统一画廊 -->
-		<section style="text-align: center; padding-top: 0.5em;">
-			<div class="gallery" id="gallery-container">
-				<p>⏳ 加载作品中...</p>
+		<!-- ========== 左侧固定查看器 ========== -->
+		<div id="viewer-panel">
+			<img id="viewer-image" src="" alt="" style="display:none;" />
+			<div id="viewer-placeholder" class="placeholder">点击分类查看作品</div>
+			<div class="nav-buttons" style="display:none;" id="nav-buttons">
+				<button id="prev-btn">◀</button>
+				<button id="next-btn">▶</button>
 			</div>
-		</section>
+			<div class="image-counter" id="image-counter" style="display:none;"></div>
+		</div>
 
-		<footer id="footer">
-			<h2>联系我</h2>
-			<p>对作品感兴趣？一起合作？发邮件或社交媒体找我。</p>
-			<div>
-				<a href="mailto:1599316531@qq.com">📧 邮箱</a>
-				<a href="https://twitter.com/youraccount">🐦 Twitter</a>
-				<a href="https://www.instagram.com/youraccount">📷 Instagram</a>
-			</div>
-		</footer>
+		<!-- ========== 右侧内容区域 ========== -->
+		<div id="right-content">
+			<header id="header">
+				<h1>咕咕鸡<br />AI 绘画作品仓库</h1>
+				<p>有好的作品会保存在这<br />有时间就更新</p>
+			</header>
 
+			<!-- 动态分类标签栏 -->
+			<div id="category-tabs"></div>
+
+			<!-- 统一画廊 -->
+			<section style="text-align: center; padding-top: 0.5em;">
+				<div class="gallery" id="gallery-container">
+					<p>⏳ 加载作品中...</p>
+				</div>
+			</section>
+
+			<footer id="footer">
+				<h2>联系我</h2>
+				<p>对作品感兴趣？一起合作？发邮件或社交媒体找我。</p>
+				<div>
+					<a href="mailto:1599316531@qq.com">📧 邮箱</a>
+					<a href="https://twitter.com/youraccount">🐦 Twitter</a>
+					<a href="https://www.instagram.com/youraccount">📷 Instagram</a>
+				</div>
+			</footer>
+		</div>
 	</div>
 
 	<!-- 隐藏的上传 + 管理模态框 -->
@@ -177,17 +253,12 @@
 		<div id="upload-panel">
 			<button id="close-modal">&times;</button>
 			<h3>🔧 作品集管理</h3>
-
-			<!-- Token -->
 			<div style="text-align: left;">
 				<label>🔑 GitHub Token <span class="hint">（自动保存）</span></label>
 				<input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxx" />
 				<button onclick="saveToken()" style="width:auto; padding:6px 15px;">保存</button>
 			</div>
-
 			<hr>
-
-			<!-- 分类创建 -->
 			<div style="text-align: left;">
 				<label>📁 当前分类</label>
 				<select id="category-select"></select>
@@ -196,22 +267,15 @@
 					<button onclick="addCategory()" style="width:auto; padding:6px 12px;">创建</button>
 				</div>
 			</div>
-
 			<hr>
-
-			<!-- 上传 -->
 			<div style="text-align: left;">
 				<label>🖼️ 选择图片（可多选）</label>
 				<input type="file" id="file-input" accept="image/*" multiple />
 			</div>
 			<button onclick="uploadImages()">⬆️ 上传所有选中图片</button>
-
 			<hr>
-
-			<!-- 危险操作：删除分类 -->
 			<button class="danger-btn" onclick="deleteCategory()">🗑️ 删除当前分类（所有图片）</button>
 			<p style="margin-top:10px; font-size:0.8em; color:#666;">⚠️ 删除后不可恢复，请谨慎操作</p>
-
 			<p id="upload-status" style="margin-top:10px; font-size:0.9em; color:#333;"></p>
 		</div>
 	</div>
@@ -230,11 +294,10 @@
 			owner = host.split('.')[0];
 			repo = pathParts.length > 0 ? pathParts[0] : host;
 		} else {
-			// 自定义域名请修改这里！
 			owner = 'guguji305';
 			repo = 'guguji-ai';
 		}
-		const branch = 'main';   // 如果不是 main 分支请改成 master
+		const branch = 'main';
 
 		// ========== Token ==========
 		const tokenKey = 'github_token_for_uploader';
@@ -250,24 +313,79 @@
 			}
 		}
 
-		// ========== 分类管理 ==========
+		// ========== 查看器相关变量 ==========
 		let currentCategory = 'sfw';
 		let categoryList = ['sfw', 'nsfw'];
+		let categoryImages = [];                // 当前分类的图片对象数组
+		let currentViewerIdx = -1;             // 查看器当前索引（-1 表示无显示）
 
+		// ========== 查看器控制函数 ==========
+		function showImageViewer(index) {
+			if (!categoryImages.length) {
+				hideViewer();
+				return;
+			}
+			if (index < 0) index = 0;
+			if (index >= categoryImages.length) index = categoryImages.length - 1;
+			currentViewerIdx = index;
+			const img = categoryImages[index];
+			document.getElementById('viewer-image').src = img.download_url;
+			document.getElementById('viewer-image').style.display = 'block';
+			document.getElementById('viewer-placeholder').style.display = 'none';
+			document.getElementById('nav-buttons').style.display = 'flex';
+			document.getElementById('image-counter').style.display = 'block';
+			document.getElementById('image-counter').textContent = `${index + 1} / ${categoryImages.length}`;
+		}
+
+		function hideViewer() {
+			document.getElementById('viewer-image').style.display = 'none';
+			document.getElementById('viewer-placeholder').style.display = 'block';
+			document.getElementById('nav-buttons').style.display = 'none';
+			document.getElementById('image-counter').style.display = 'none';
+			currentViewerIdx = -1;
+		}
+
+		function navigateViewer(direction) {
+			if (!categoryImages.length) return;
+			currentViewerIdx = (currentViewerIdx + direction + categoryImages.length) % categoryImages.length;
+			showImageViewer(currentViewerIdx);
+		}
+
+		// 缩略图点击事件（在加载画廊时绑定）
+		function openViewerFromThumb(index) {
+			showImageViewer(index);
+		}
+
+		// 绑定左右箭头
+		document.getElementById('prev-btn').addEventListener('click', () => navigateViewer(-1));
+		document.getElementById('next-btn').addEventListener('click', () => navigateViewer(1));
+
+		// ========== 分类管理 ==========
 		async function fetchCategories() {
 			const token = getToken();
 			const headers = token ? { 'Authorization': `token ${token}` } : {};
-			const url = `https://api.github.com/${owner}/${repo}/tree/images`;
+			const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
 			try {
 				const res = await fetch(url, { headers });
 				if (!res.ok) {
 					return JSON.parse(localStorage.getItem('custom_categories') || '["sfw","nsfw"]');
 				}
-				const items = await res.json();
-				const dirs = items.filter(i => i.type === 'dir').map(i => i.name);
-				if (!dirs.includes('sfw')) dirs.push('sfw');
-				if (!dirs.includes('nsfw')) dirs.push('nsfw');
-				return [...new Set(dirs)];
+				const data = await res.json();
+				const dirs = [];
+				if (data.tree) {
+					data.tree.forEach(item => {
+						if (item.path.startsWith('images/')) {
+							const parts = item.path.split('/');
+							if (parts.length >= 2) {
+								const dir = parts[1];
+								if (!dirs.includes(dir)) dirs.push(dir);
+							}
+						}
+					});
+				}
+				if (!dirs.includes('sfw')) dirs.unshift('sfw');
+				if (!dirs.includes('nsfw')) dirs.unshift('nsfw');
+				return dirs;
 			} catch (e) {
 				return JSON.parse(localStorage.getItem('custom_categories') || '["sfw","nsfw"]');
 			}
@@ -288,7 +406,6 @@
 			});
 
 			renderCategoryTabs(categories);
-
 			if (!categories.includes(currentCategory)) {
 				currentCategory = categories[0];
 			}
@@ -339,10 +456,14 @@
 			loadGallery(category);
 		}
 
-		// ========== 画廊加载（附带 sha 与删除按钮） ==========
+		// ========== 画廊加载（附带查看器联动） ==========
 		async function loadGallery(category) {
 			const container = document.getElementById('gallery-container');
 			container.innerHTML = '<p>⏳ 加载中...</p>';
+
+			// 清除左侧查看器当前状态
+			categoryImages = [];
+			hideViewer();
 
 			const token = getToken();
 			const headers = token ? { 'Authorization': `token ${token}` } : {};
@@ -368,7 +489,14 @@
 					container.innerHTML = '<p>暂无图片</p>';
 					return;
 				}
-				imageFiles.forEach(file => {
+				// 保存当前分类图片数组
+				categoryImages = imageFiles;
+				// 显示第一张到查看器
+				if (categoryImages.length > 0) {
+					showImageViewer(0);
+				}
+				// 构建缩略图网格
+				imageFiles.forEach((file, idx) => {
 					const wrapper = document.createElement('div');
 					wrapper.className = 'img-wrapper';
 
@@ -376,6 +504,8 @@
 					img.src = file.download_url;
 					img.alt = file.name;
 					img.loading = 'lazy';
+					// 点击缩略图跳转查看器
+					img.addEventListener('click', () => openViewerFromThumb(idx));
 
 					const delBtn = document.createElement('button');
 					delBtn.className = 'delete-img-btn';
@@ -429,7 +559,7 @@
 			}
 		}
 
-		// ========== 删除整个分类（所有图片） ==========
+		// ========== 删除整个分类 ==========
 		async function deleteCategory() {
 			const category = document.getElementById('category-select').value;
 			if (!confirm(`⚠️ 将删除“${category}”作品集及其所有图片！\n此操作不可恢复，确定继续吗？`)) return;
@@ -444,7 +574,6 @@
 			status.textContent = `🗑️ 正在删除“${category}”中的所有文件...`;
 
 			try {
-				// 获取该目录下所有文件
 				const listUrl = `https://api.github.com/repos/${owner}/${repo}/contents/images/${category}`;
 				const listRes = await fetch(listUrl, {
 					headers: { 'Authorization': `token ${token}` }
@@ -454,13 +583,11 @@
 				}
 				const files = await listRes.json();
 				if (!Array.isArray(files) || files.length === 0) {
-					// 目录为空，直接删除目录引用（实际上 GitHub 空目录会自动消失）
 					status.textContent = '✅ 分类已空，可直接移除。';
 					await refreshCategoryList();
 					return;
 				}
 
-				// 逐个删除文件
 				let deleted = 0;
 				for (const file of files) {
 					const delUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${file.path}`;
@@ -477,9 +604,7 @@
 						})
 					});
 					if (delRes.ok) deleted++;
-					else {
-						console.warn(`删除 ${file.name} 失败`);
-					}
+					else console.warn(`删除 ${file.name} 失败`);
 				}
 				status.textContent = `✅ 已删除 ${deleted}/${files.length} 个文件，分类已清空。`;
 				await refreshCategoryList();
