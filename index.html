@@ -4,13 +4,12 @@
 	<title>咕咕鸡的 AI 作品集</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-	<!-- 引入 Lens 模板基础 CSS (为了字体、图标和基础 Reset) -->
 	<link rel="stylesheet" href="assets/css/main.css" />
 	<link rel="stylesheet" href="assets/css/fontawesome-all.min.css" />
 	<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 	
 	<style>
-		/* ========== 1. 全局重置与深色主题统一 (解决混乱的核心) ========== */
+		/* ========== 1. 全局重置与深色主题统一 ========== */
 		body {
 			margin: 0; padding: 0; overflow: hidden;
 			background: #121212; color: #e0e0e0;
@@ -18,7 +17,6 @@
 		}
 		#app-container { display: flex; height: 100vh; width: 100vw; }
 
-		/* 隐藏原模板自带的全屏 Viewer，防止 JS 冲突 */
 		#viewer { display: none !important; }
 
 		/* ========== 2. 左侧实时幻灯片 Viewer (PC端) ========== */
@@ -28,10 +26,16 @@
 			position: relative; flex-shrink: 0;
 			border-right: 1px solid #222;
 		}
-		#viewer-img {
-			max-width: 92%; max-height: 92%; object-fit: contain;
+		#viewer-media {
+			width: 92%; height: 92%;
+			display: flex; align-items: center; justify-content: center;
+		}
+		#viewer-media img, #viewer-media video {
+			max-width: 100%; max-height: 100%;
+			object-fit: contain;
+			border-radius: 4px;
+			box-shadow: 0 15px 40px rgba(0,0,0,0.6);
 			transition: opacity 0.6s ease-in-out;
-			box-shadow: 0 15px 40px rgba(0,0,0,0.6); border-radius: 4px;
 		}
 		.viewer-overlay {
 			position: absolute; bottom: 30px; left: 0; right: 0;
@@ -50,7 +54,7 @@
 			font-size: 0.85em; letter-spacing: 1px; text-transform: uppercase;
 		}
 
-		/* ========== 3. 右侧内容区 (画廊与文本) ========== */
+		/* ========== 3. 右侧内容区 ========== */
 		#right-content {
 			width: 40%; height: 100%; overflow-y: auto;
 			background: #181818; box-sizing: border-box;
@@ -63,8 +67,8 @@
 		header, footer { text-align: center; margin-bottom: 3em; }
 		header h1 { font-size: 2.2em; color: #fff; margin-bottom: 0.2em; line-height: 1.2; }
 		header p { color: #888; font-size: 1em; }
-		
-		/* 分类标签栏 (深色版) */
+
+		/* 分类标签栏 */
 		#category-tabs { text-align: center; margin: 2em 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 		#category-tabs button {
 			padding: 8px 20px; border: 1px solid #333; border-radius: 20px;
@@ -76,7 +80,7 @@
 		#category-tabs button.nsfw-tab { border-color: #500; color: #f88; }
 		#category-tabs button.nsfw-tab.active { background: #c00; color: #fff; border-color: #c00; }
 
-		/* 动态画廊网格 (深色版) */
+		/* 画廊网格 */
 		.gallery-grid {
 			display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
 			gap: 12px; margin: 2em 0;
@@ -90,10 +94,18 @@
 			width: 100%; height: 100%; object-fit: cover; display: block;
 			transition: transform 0.4s ease;
 		}
+		.img-wrapper .video-placeholder {
+			width: 100%; height: 100%;
+			background: #2a2a2a;
+			display: flex; align-items: center; justify-content: center;
+			color: #fff; font-size: 3em;
+			transition: background 0.3s;
+		}
+		.img-wrapper:hover .video-placeholder { background: #444; }
 		.img-wrapper:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
 		.img-wrapper:hover img { transform: scale(1.08); }
 		.img-wrapper.active { outline: 3px solid #007bff; outline-offset: -3px; }
-		
+
 		/* 删除按钮 */
 		.delete-img-btn {
 			position: absolute; top: 8px; right: 8px;
@@ -111,14 +123,18 @@
 		footer .icons a { color: #888; font-size: 1.5em; transition: 0.2s; }
 		footer .icons a:hover { color: #fff; }
 
-		/* ========== 4. 移动端专属全屏 Viewer (窄屏触发) ========== */
+		/* ========== 4. 移动端专属全屏 Viewer ========== */
 		#mobile-viewer {
 			display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
 			background: rgba(0,0,0,0.95); z-index: 2000;
 			flex-direction: column; align-items: center; justify-content: center;
 		}
 		#mobile-viewer.active { display: flex; }
-		#mobile-viewer img { max-width: 95%; max-height: 80vh; object-fit: contain; }
+		#mobile-media {
+			max-width: 95%; max-height: 80vh;
+			display: flex; align-items: center; justify-content: center;
+		}
+		#mobile-media img, #mobile-media video { max-width: 100%; max-height: 100%; object-fit: contain; }
 		#mobile-viewer .mv-controls {
 			position: absolute; bottom: 30px; display: flex; gap: 20px; align-items: center;
 		}
@@ -129,34 +145,39 @@
 		}
 		#mobile-viewer .mv-close { position: absolute; top: 20px; right: 20px; font-size: 30px; color: #fff; cursor: pointer; background: none; border: none; }
 
-		/* ========== 5. 上传管理模态框 ========== */
-		#upload-modal {
+		/* ========== 5. 模态框（管理 & 年龄确认） ========== */
+		.modal {
 			display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
 			background: rgba(0,0,0,0.8); z-index: 3000; justify-content: center; align-items: center;
 		}
-		#upload-modal.active { display: flex; }
-		#upload-panel {
+		.modal.active { display: flex; }
+		.modal-panel {
 			background: #222; color: #eee; padding: 2em; border-radius: 12px;
 			max-width: 450px; width: 90%; max-height: 90vh; overflow-y: auto;
 			box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid #333;
+			position: relative; text-align: center;
 		}
-		#upload-panel h3 { margin-top: 0; color: #fff; text-align: center; }
-		#upload-panel input, #upload-panel select, #upload-panel button {
+		.modal-panel h3 { margin-top: 0; color: #fff; }
+		.modal-panel input, .modal-panel select, .modal-panel button {
 			margin: 6px 0; padding: 10px; border-radius: 6px;
 			border: 1px solid #444; background: #111; color: #eee;
 			width: 100%; box-sizing: border-box; font-size: 14px;
 		}
-		#upload-panel button { background: #fff; color: #000; font-weight: bold; cursor: pointer; border: none; }
-		#upload-panel button:hover { background: #ddd; }
-		#close-modal { position: absolute; top: 10px; right: 15px; background: none!important; border: none; font-size: 24px; color: #888; cursor: pointer; width: auto; }
+		.modal-panel button { background: #fff; color: #000; font-weight: bold; cursor: pointer; border: none; }
+		.modal-panel button:hover { background: #ddd; }
+		.close-modal-btn { position: absolute; top: 10px; right: 15px; background: none !important; border: none; font-size: 24px; color: #888; cursor: pointer; width: auto; }
 		.danger-btn { background: #c0392b !important; color: white !important; }
 		#upload-status { margin-top: 15px; font-size: 0.85em; color: #aaa; background: #111; padding: 10px; border-radius: 6px; max-height: 120px; overflow-y: auto; }
 
-		/* ========== 6. 移动端响应式 (核心适配) ========== */
+		/* 年龄确认对话框特定 */
+		#age-modal .buttons { display: flex; gap: 10px; justify-content: center; margin-top: 1.5em; }
+		#age-modal button { width: auto; padding: 10px 30px; }
+
+		/* ========== 6. 移动端响应式 ========== */
 		@media (max-width: 900px) {
 			body { overflow: auto; }
 			#app-container { flex-direction: column; height: auto; }
-			#left-viewer { display: none; } /* 移动端隐藏左侧幻灯片，节省空间 */
+			#left-viewer { display: none; }
 			#right-content { width: 100%; height: auto; border: none; }
 			.content-wrapper { padding: 2em 1em; }
 			header h1 { font-size: 1.8em; }
@@ -166,27 +187,24 @@
 </head>
 <body class="is-preload-0 is-preload-1 is-preload-2">
 
-	<!-- 欺骗原模板 main.js 的隐藏容器 -->
+	<!-- 欺骗原模板容器 -->
 	<div id="viewer"><div class="inner"><div class="nav-next"></div><div class="nav-previous"></div><div class="toggle"></div></div><div class="slide loading"><div class="caption"></div><div class="image"></div></div></div>
 
-	<!-- 主应用容器 -->
+	<!-- 主应用 -->
 	<div id="app-container">
-		
-		<!-- 左侧实时幻灯片 (PC端显示) -->
 		<aside id="left-viewer">
-			<img id="viewer-img" src="" alt="Slideshow" />
+			<div id="viewer-media"></div>
 			<div class="viewer-overlay">
 				<button id="resume-slideshow">▶ 恢复自动播放</button>
 				<div id="viewer-caption"></div>
 			</div>
 		</aside>
 
-		<!-- 右侧内容区 -->
 		<main id="right-content">
 			<div class="content-wrapper">
 				<header>
 					<h1>咕咕鸡 <br/>AI 绘画作品集</h1>
-					<p>有好的作品会保存在这，有时间就更新</p>
+					<p>有好的作品保存在这，有时间就更新</p>
 				</header>
 
 				<section id="thumbnails">
@@ -209,10 +227,10 @@
 		</main>
 	</div>
 
-	<!-- 移动端专属全屏 Viewer -->
+	<!-- 移动端 Viewer -->
 	<div id="mobile-viewer">
 		<button class="mv-close" onclick="closeMobileViewer()">&times;</button>
-		<img id="mv-img" src="" alt="" />
+		<div id="mobile-media"></div>
 		<div class="mv-controls">
 			<div class="mv-btn" onclick="mvPrev()">❮</div>
 			<div class="mv-btn" onclick="mvNext()">❯</div>
@@ -220,9 +238,9 @@
 	</div>
 
 	<!-- 管理模态框 -->
-	<div id="upload-modal">
-		<div id="upload-panel" style="position:relative;">
-			<button id="close-modal">&times;</button>
+	<div id="upload-modal" class="modal">
+		<div class="modal-panel">
+			<button class="close-modal-btn" onclick="closeModal('upload-modal')">&times;</button>
 			<h3>🔧 作品集管理</h3>
 			<div style="text-align: left;">
 				<label>🔑 GitHub Token</label>
@@ -240,13 +258,25 @@
 			</div>
 			<hr style="border-color:#333; margin: 15px 0;">
 			<div style="text-align: left;">
-				<label>🖼️ 选择图片（可多选）</label>
-				<input type="file" id="file-input" accept="image/*" multiple />
+				<label>🖼️🎬 选择图片/视频（可多选）</label>
+				<input type="file" id="file-input" accept="image/*,video/*" multiple />
 			</div>
-			<button onclick="uploadImages()">⬆️ 上传所有选中图片</button>
+			<button onclick="uploadMedia()">⬆️ 上传所有选中文件</button>
 			<hr style="border-color:#333; margin: 15px 0;">
 			<button class="danger-btn" onclick="deleteCategory()">🗑️ 删除当前分类</button>
 			<div id="upload-status"></div>
+		</div>
+	</div>
+
+	<!-- 年龄确认模态框 -->
+	<div id="age-modal" class="modal">
+		<div class="modal-panel">
+			<h3>🔞 内容警告</h3>
+			<p>此区域包含成人内容，请确认您已年满18周岁。</p>
+			<div class="buttons">
+				<button onclick="confirmAge(true)">是，我已满18岁</button>
+				<button onclick="confirmAge(false)" style="background:#444; color:#fff;">否，离开</button>
+			</div>
 		</div>
 	</div>
 
@@ -257,13 +287,14 @@
 	<script src="assets/js/main.js"></script>
 
 	<script>
-		// ========== 1. 基础配置与 Token ==========
+		// ========== 基础配置 ==========
 		const host = window.location.host;
 		const pathParts = window.location.pathname.split('/').filter(p => p);
 		let owner = host.endsWith('.github.io') ? host.split('.')[0] : 'guguji305';
 		let repo = host.endsWith('.github.io') ? (pathParts[0] || host) : 'guguji-ai';
 		const branch = 'main';
 		const tokenKey = 'github_token_for_uploader';
+		const ageConfirmedKey = 'nsfw_age_confirmed';
 
 		function getToken() { return localStorage.getItem(tokenKey); }
 		function saveToken() {
@@ -274,8 +305,14 @@
 
 		let currentCategory = 'sfw';
 		let categoryList = ['sfw', 'nsfw'];
+		// 媒体数据：{ url, type: 'image'|'video', name }
+		let mediaItems = [];
+		let currentIndex = 0;
+		let slideshowTimer = null;
+		let isFixed = false;
+		const isMobile = window.innerWidth <= 900;
 
-		// ========== 2. 分类管理 ==========
+		// ========== 分类 ==========
 		async function fetchCategories() {
 			const token = getToken();
 			const headers = token ? { 'Authorization': `token ${token}` } : {};
@@ -331,46 +368,79 @@
 				btn.textContent = cat === 'nsfw' ? '🔞 NSFW' : cat;
 				btn.className = (cat === currentCategory) ? 'active' : '';
 				if (cat === 'nsfw') btn.classList.add('nsfw-tab');
-				btn.onclick = () => { currentCategory = cat; renderCategoryTabs(); loadGallery(cat); };
+				btn.onclick = () => {
+					if (cat === 'nsfw' && !localStorage.getItem(ageConfirmedKey)) {
+						openModal('age-modal');
+					} else {
+						currentCategory = cat;
+						renderCategoryTabs();
+						loadGallery(cat);
+					}
+				};
 				container.appendChild(btn);
 			});
 		}
 
-		// ========== 3. 画廊加载与幻灯片逻辑 ==========
-		let imageUrls = [], imageNames = [], currentIndex = 0, slideshowTimer = null, isFixed = false;
-		const isMobile = window.innerWidth <= 900;
+		// 年龄确认
+		function confirmAge(confirmed) {
+			closeModal('age-modal');
+			if (confirmed) {
+				localStorage.setItem(ageConfirmedKey, 'true');
+				currentCategory = 'nsfw';
+				renderCategoryTabs();
+				loadGallery('nsfw');
+			} else {
+				// 保持当前分类
+			}
+		}
 
+		// ========== 画廊与幻灯片 ==========
 		async function loadGallery(category) {
 			const container = document.getElementById('gallery-container');
 			container.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color:#666;">⏳ 加载中...</p>';
 			const headers = getToken() ? { 'Authorization': `token ${getToken()}` } : {};
-			
+
 			try {
 				const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/images/${category}`, { headers });
-				if (!res.ok) { container.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color:#666;">暂无作品</p>'; imageUrls=[]; startSlideshow(); return; }
+				if (!res.ok) { container.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color:#666;">暂无作品</p>'; mediaItems=[]; startSlideshow(); return; }
 				const files = await res.json();
-				const imgs = files.filter(f => f.type === 'file' && f.name.match(/\.(jpg|jpeg|png|gif|webp)$/i));
-				
-				container.innerHTML = '';
-				if (imgs.length === 0) { container.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color:#666;">暂无图片</p>'; imageUrls=[]; startSlideshow(); return; }
+				const supported = files.filter(f => f.type === 'file' && /\.(jpg|jpeg|png|gif|webp|mp4|webm|ogg|mov)$/i.test(f.name));
 
-				imageUrls = imgs.map(f => f.download_url);
-				imageNames = imgs.map(f => f.name.replace(/\.[^/.]+$/, "").replace(/_/g, ' '));
+				container.innerHTML = '';
+				if (supported.length === 0) {
+					container.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color:#666;">暂无媒体</p>';
+					mediaItems=[]; startSlideshow(); return;
+				}
+
+				mediaItems = supported.map(f => ({
+					url: f.download_url,
+					type: f.name.match(/\.(mp4|webm|ogg|mov)$/i) ? 'video' : 'image',
+					name: f.name.replace(/\.[^/.]+$/, "").replace(/_/g, ' '),
+					path: f.path,
+					sha: f.sha
+				}));
 				currentIndex = 0;
 
-				imgs.forEach((file, i) => {
-					const w = document.createElement('div'); w.className = 'img-wrapper';
-					const img = document.createElement('img'); img.src = file.download_url; img.loading = 'lazy';
-					
+				supported.forEach((file, i) => {
+					const wrapper = document.createElement('div'); wrapper.className = 'img-wrapper';
+					if (mediaItems[i].type === 'image') {
+						const img = document.createElement('img'); img.src = file.download_url; img.loading = 'lazy';
+						wrapper.appendChild(img);
+					} else {
+						const placeholder = document.createElement('div');
+						placeholder.className = 'video-placeholder';
+						placeholder.innerHTML = '▶';
+						wrapper.appendChild(placeholder);
+					}
+
 					const del = document.createElement('button'); del.className = 'delete-img-btn'; del.innerHTML = '✕';
-					del.onclick = (e) => { e.stopPropagation(); deleteImage(file.path, file.sha, file.name); };
+					del.onclick = (e) => { e.stopPropagation(); deleteFile(file.path, file.sha, file.name); };
 
-					w.onclick = () => {
-						if (isMobile) openMobileViewer(i); // 移动端弹窗
-						else fixImage(i);                 // PC端固定左侧大图
+					wrapper.onclick = () => {
+						if (isMobile) openMobileViewer(i);
+						else fixMedia(i);
 					};
-
-					w.appendChild(img); w.appendChild(del); container.appendChild(w);
+					wrapper.appendChild(del); container.appendChild(wrapper);
 				});
 				startSlideshow();
 			} catch (e) { container.innerHTML = `<p style="color:red; grid-column: 1/-1;">⚠️ ${e.message}</p>`; }
@@ -380,34 +450,80 @@
 			isFixed = false;
 			document.getElementById('resume-slideshow').style.display = 'none';
 			if (slideshowTimer) clearInterval(slideshowTimer);
-			if (imageUrls.length === 0) { document.getElementById('viewer-img').src = ''; return; }
-			
-			showImage(currentIndex);
+			if (mediaItems.length === 0) {
+				document.getElementById('viewer-media').innerHTML = '';
+				return;
+			}
+			// 找到第一个图片作为起点，如果全是视频则停止
+			let firstImgIdx = -1;
+			for (let i = 0; i < mediaItems.length; i++) {
+				if (mediaItems[i].type === 'image') { firstImgIdx = i; break; }
+			}
+			if (firstImgIdx === -1) {
+				// 没有图片可自动播放，显示第一个视频（静态）
+				displayMedia(0);
+				return;
+			}
+			currentIndex = firstImgIdx;
+			displayMedia(currentIndex);
 			slideshowTimer = setInterval(() => {
-				currentIndex = (currentIndex + 1) % imageUrls.length;
-				showImage(currentIndex);
+				let next = (currentIndex + 1) % mediaItems.length;
+				let attempts = 0;
+				while (mediaItems[next].type === 'video' && attempts < mediaItems.length) {
+					next = (next + 1) % mediaItems.length;
+					attempts++;
+				}
+				if (attempts >= mediaItems.length) {
+					// 只剩视频，停止自动播放
+					clearInterval(slideshowTimer);
+					return;
+				}
+				currentIndex = next;
+				displayMedia(currentIndex);
 			}, 4000);
 		}
 
-		function showImage(i) {
-			const img = document.getElementById('viewer-img');
-			const cap = document.getElementById('viewer-caption');
-			img.style.opacity = 0;
-			setTimeout(() => {
-				img.src = imageUrls[i]; cap.textContent = imageNames[i]; img.style.opacity = 1;
-				highlightThumb(i);
-				const next = new Image(); next.src = imageUrls[(i + 1) % imageUrls.length]; // 预加载
-			}, 300);
+		function displayMedia(i) {
+			const container = document.getElementById('viewer-media');
+			const caption = document.getElementById('viewer-caption');
+			const item = mediaItems[i];
+			container.innerHTML = '';
+			caption.textContent = item.name;
+
+			if (item.type === 'image') {
+				const img = document.createElement('img');
+				img.src = item.url;
+				img.style.opacity = 0;
+				container.appendChild(img);
+				setTimeout(() => { img.style.opacity = 1; }, 100);
+			} else {
+				const video = document.createElement('video');
+				video.src = item.url;
+				video.controls = true;
+				video.style.maxWidth = '100%';
+				video.style.maxHeight = '100%';
+				container.appendChild(video);
+				// 视频播放时暂停幻灯片
+				if (slideshowTimer) clearInterval(slideshowTimer);
+				isFixed = true;
+				document.getElementById('resume-slideshow').style.display = 'inline-block';
+				video.onplay = () => {}; // 可添加逻辑
+			}
+			highlightThumb(i);
+			// 预加载下一张
+			if (i + 1 < mediaItems.length) {
+				const next = mediaItems[i + 1];
+				if (next.type === 'image') {
+					const preload = new Image(); preload.src = next.url;
+				}
+			}
 		}
 
-		function fixImage(i) {
+		function fixMedia(i) {
 			isFixed = true;
 			if (slideshowTimer) clearInterval(slideshowTimer);
 			currentIndex = i;
-			const img = document.getElementById('viewer-img');
-			const cap = document.getElementById('viewer-caption');
-			img.style.opacity = 0;
-			setTimeout(() => { img.src = imageUrls[i]; cap.textContent = imageNames[i]; img.style.opacity = 1; highlightThumb(i); }, 150);
+			displayMedia(i);
 			document.getElementById('resume-slideshow').style.display = 'inline-block';
 		}
 
@@ -417,19 +533,34 @@
 
 		document.getElementById('resume-slideshow').onclick = startSlideshow;
 
-		// ========== 4. 移动端全屏 Viewer 逻辑 ==========
-		let mvIndex = 0;
+		// ========== 移动端查看器 ==========
 		function openMobileViewer(i) {
-			mvIndex = i;
-			document.getElementById('mv-img').src = imageUrls[i];
+			const container = document.getElementById('mobile-media');
+			const item = mediaItems[i];
+			container.innerHTML = '';
+			if (item.type === 'image') {
+				const img = document.createElement('img');
+				img.src = item.url;
+				container.appendChild(img);
+			} else {
+				const video = document.createElement('video');
+				video.src = item.url;
+				video.controls = true;
+				container.appendChild(video);
+			}
 			document.getElementById('mobile-viewer').classList.add('active');
+			mvIndex = i;
 		}
-		function closeMobileViewer() { document.getElementById('mobile-viewer').classList.remove('active'); }
-		function mvNext() { mvIndex = (mvIndex + 1) % imageUrls.length; document.getElementById('mv-img').src = imageUrls[mvIndex]; }
-		function mvPrev() { mvIndex = (mvIndex - 1 + imageUrls.length) % imageUrls.length; document.getElementById('mv-img').src = imageUrls[mvIndex]; }
+		function closeMobileViewer() {
+			document.getElementById('mobile-viewer').classList.remove('active');
+			document.getElementById('mobile-media').innerHTML = '';
+		}
+		let mvIndex = 0;
+		function mvNext() { mvIndex = (mvIndex + 1) % mediaItems.length; openMobileViewer(mvIndex); }
+		function mvPrev() { mvIndex = (mvIndex - 1 + mediaItems.length) % mediaItems.length; openMobileViewer(mvIndex); }
 
-		// ========== 5. 增删改 API ==========
-		async function deleteImage(path, sha, name) {
+		// ========== 文件操作 ==========
+		async function deleteFile(path, sha, name) {
 			if (!confirm(`删除 ${name}？`)) return;
 			const token = getToken(); if (!token) return alert('需 Token');
 			const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
@@ -441,28 +572,29 @@
 
 		async function deleteCategory() {
 			const cat = document.getElementById('category-select').value;
-			if (!confirm(`删除 ${cat} 所有图片？`)) return;
+			if (!confirm(`删除 ${cat} 所有文件？不可恢复！`)) return;
 			const token = getToken(); if (!token) return alert('需 Token');
 			const status = document.getElementById('upload-status'); status.textContent = '🗑️ 删除中...';
-			const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/images/${cat}`, { headers: { 'Authorization': `token ${token}` } });
-			const files = await res.json();
-			let del = 0;
+			const listRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/images/${cat}`, { headers: { 'Authorization': `token ${token}` } });
+			if (!listRes.ok) { status.textContent = '❌ 无法读取文件列表'; return; }
+			const files = await listRes.json();
+			let deleted = 0;
 			for (const f of files) {
 				const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${f.path}`, {
 					method: 'DELETE', headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
 					body: JSON.stringify({ message: `Delete ${f.name}`, sha: f.sha, branch })
 				});
-				if (r.ok) del++;
+				if (r.ok) deleted++;
 			}
-			status.textContent = `✅ 已删除 ${del} 个文件`; refreshCategoryList();
+			status.textContent = `✅ 已删除 ${deleted}/${files.length} 个文件`; refreshCategoryList();
 		}
 
-		async function uploadImages() {
+		async function uploadMedia() {
 			const token = getToken(); if (!token) return alert('需 Token');
 			const files = document.getElementById('file-input').files;
 			const cat = document.getElementById('category-select').value;
 			const status = document.getElementById('upload-status');
-			if (!files.length) return alert('选图片');
+			if (!files.length) return alert('请选择文件');
 			status.innerHTML = '⏳ 上传中...';
 			const results = [];
 			for (let i = 0; i < files.length; i++) {
@@ -479,20 +611,34 @@
 			document.getElementById('file-input').value = '';
 		}
 
-		// ========== 6. 管理面板与初始化 ==========
-		const modal = document.getElementById('upload-modal');
-		document.getElementById('close-modal').onclick = () => { modal.classList.remove('active'); document.body.classList.remove('admin-mode'); };
+		// ========== 模态框控制 ==========
+		function openModal(id) { document.getElementById(id).classList.add('active'); }
+		function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+		// 管理快捷键
 		window.addEventListener('keydown', e => {
 			if (e.ctrlKey && e.shiftKey && e.key === 'U') {
 				e.preventDefault();
-				modal.classList.toggle('active'); document.body.classList.toggle('admin-mode');
+				const modal = document.getElementById('upload-modal');
+				modal.classList.toggle('active');
+				document.body.classList.toggle('admin-mode');
 				if (modal.classList.contains('active')) refreshCategoryList();
 			}
-			if (e.key === 'Escape') closeMobileViewer();
+			if (e.key === 'Escape') {
+				closeModal('upload-modal');
+				closeMobileViewer();
+			}
 		});
 
+		// 点击模态框背景关闭
+		document.querySelectorAll('.modal').forEach(m => {
+			m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
+		});
+
+		// ========== 初始化 ==========
 		window.addEventListener('load', async () => {
-			const t = localStorage.getItem(tokenKey); if (t) document.getElementById('token-input').value = t;
+			const token = localStorage.getItem(tokenKey);
+			if (token) document.getElementById('token-input').value = token;
 			await refreshCategoryList();
 		});
 	</script>
